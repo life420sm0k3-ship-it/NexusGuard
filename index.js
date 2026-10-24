@@ -297,6 +297,8 @@ client.on("messageCreate", async message => {
 
 client.on("interactionCreate", async i => {
   if (!i.isChatInputCommand()) return;
+  // Let setupServer.js handle this command.
+  if (i.commandName === "setupserver") return;
   // For grouped commands, dispatch using the selected subcommand's original
   // name so the existing handlers and option reads continue to work unchanged.
   const n = i.options.getSubcommand(false) || i.commandName;
