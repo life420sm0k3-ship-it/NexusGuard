@@ -72,6 +72,7 @@ const DEFAULT_SETTINGS = {
   accentColor: "#8b5cf6"
 };
 
+
 async function initDatabase() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS guild_settings (
@@ -107,6 +108,20 @@ async function initDatabase() {
       reason TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `);
+
+  // Create the session table safely and only if it doesn't exist.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS session (
+      sid VARCHAR NOT NULL PRIMARY KEY,
+      sess JSON NOT NULL,
+      expire TIMESTAMP(6) NOT NULL
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS "IDX_session_expire"
+    ON session (expire)
   `);
 }
 
