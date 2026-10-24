@@ -960,42 +960,8 @@ function registerSetupCommand(client) {
       PermissionFlagsBits.Administrator
     );
 
-  /*
-   * Register the command globally.
-   *
-   * This replaces the existing global command definition with
-   * the current version. Global command updates can take a little
-   * time to become visible in Discord.
-   */
-  client.once('ready', async () => {
-    try {
-      if (!client.application) {
-        throw new Error(
-          'Discord application is not ready.'
-        );
-      }
-
-      const existing = await client.application.commands.fetch();
-
-      const otherCommands = existing
-        .filter(item => item.name !== 'setupserver')
-        .map(item => item.toJSON());
-
-      await client.application.commands.set([
-        ...otherCommands,
-        command.toJSON()
-      ]);
-
-      console.log(
-        '[NexusGuard] Registered /setupserver globally.'
-      );
-    } catch (error) {
-      console.error(
-        '[NexusGuard] Could not register /setupserver:',
-        error
-      );
-    }
-  });
+  // The main index.js registers all global commands in one place.
+  // Do not separately replace the global command list here.
 
   client.on('interactionCreate', async interaction => {
     /*
@@ -1016,66 +982,42 @@ function registerSetupCommand(client) {
         userId: interaction.user.id
       });
 
-      if (!interaction.inGuild() || !interaction.guild) {
-        try {
-          await interaction.reply({
-            content:
-              'Please run /setupserver inside the Discord server you want to set up.',
-            flags: 64
+      // A guild ID is the reliable test for a server-scoped interaction.
+      if (!interaction.guildId) {
+        await interaction.reply({
+          content: 'Please run /setupserver inside the Discord server you want to set up.',
+          flags: 64
+        }).catch(error => console.error('[NexusGuard Setup] Context reply failed:', error));
+        return;
+      }
+
+      // Acknowledge promptly so Discord does not expire the interaction.
+      try {
+        await interaction.deferReply({ flags: 64 });
+      } catch (error) {
+        console.error('[NexusGuard Setup] Could not acknowledge interaction:', error);
+        return;
+      }
+
+      try {
+        const guild = interaction.guild || await client.guilds.fetch(interaction.guildId);
+
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+          await interaction.editReply({
+            content: 'Only server administrators can run /setupserver.'
           });
-        } catch (error) {
-          console.error(
-            '[NexusGuard Setup] Could not reply to non-guild interaction:',
-            error
-          );
+          return;
         }
 
-        return;
-      }
-
-      if (
-        !interaction.memberPermissions?.has(
-          PermissionFlagsBits.Administrator
-        )
-      ) {
-        await interaction.reply({
-          content:
-            'Only server administrators can run this setup.',
-          flags: 64
-        }).catch(error => {
-          console.error(
-            '[NexusGuard Setup] Permission response failed:',
-            error
-          );
-        });
-
-        return;
-      }
-
-      try {
-        await interaction.deferReply({
-          flags: 64
-        });
-      } catch (error) {
-        console.error(
-          '[NexusGuard Setup] Could not acknowledge interaction:',
-          error
-        );
-
-        return;
-      }
-
-      try {
-        const result = await setupServer(
-          interaction.guild,
-          interaction.user
-        );
+        const result = await setupServer(guild, interaction.user);
 
         const embed = new EmbedBuilder()
           .setColor(ACCENT)
           .setTitle('✦ NexusGuard Setup Complete')
           .setDescription([
             'The server layout has been checked and created.',
+            '',
+            `Server: **${guild.name}**`,
             '',
             `**New roles:** ${result.created.roles}`,
             `**New categories:** ${result.created.categories}`,
