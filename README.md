@@ -23,3 +23,8 @@ Use `/commands` or `/help` to view the categorized command directory. Category-o
 - Reminder timers that use process memory are not persistent across restarts.
 - A successful syntax check does not prove every feature works against your live Discord application. Review Render logs and test in a private test server before production use.
 - Keep your Discord bot token, OAuth client secret, session secret, and database credentials in Render environment variables.
+
+
+## /setupserver fix
+
+The global slash-command list is registered only by `index.js`; `setupServer.js` no longer overwrites the global command list. The setup handler acknowledges the interaction before fetching the guild or creating roles/channels, and uses `guildId` even when Discord.js has not populated `interaction.guild`. Ensure only one Render service (and no local process) is running the same `DISCORD_TOKEN`.

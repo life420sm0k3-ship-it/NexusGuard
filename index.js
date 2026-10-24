@@ -225,7 +225,8 @@ const commands = [
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addStringOption(o=>o.setName("title").setDescription("Embed title").setRequired(true).setMaxLength(256))
     .addStringOption(o=>o.setName("description").setDescription("Embed description").setRequired(true).setMaxLength(3500)),
-  new SlashCommandBuilder().setName("setupserver").setDescription("Create the NexusGuard server layout").setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName("setupserver").setDescription("Create the Nexus Development showcase server layout")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder().setName("serverstats").setDescription("View server stats")
 ].map(c => c.toJSON());
 

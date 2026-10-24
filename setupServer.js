@@ -951,58 +951,48 @@ async function handleTicketButton(interaction) {
 }
 
 function registerSetupCommand(client) {
-  const command = new SlashCommandBuilder()
-    .setName('setupserver')
-    .setDescription(
-      'Create the Nexus Development showcase server layout'
-    )
-    .setDefaultMemberPermissions(
-      PermissionFlagsBits.Administrator
-    );
-
-  // The main index.js registers all global commands in one place.
-  // Do not separately replace the global command list here.
-
+  // index.js owns global slash-command registration. Do not register or
+  // replace application commands from this module: doing so can race the
+  // main command registry and overwrite the other commands.
   client.on('interactionCreate', async interaction => {
-    /*
-     * Setup command handler.
-     */
     if (
       interaction.isChatInputCommand() &&
       interaction.commandName === 'setupserver'
     ) {
-      /*
-       * Log the actual interaction context so Render logs can
-       * reveal why Discord might report the wrong context.
-       */
       console.log('[NexusGuard Setup] Command received:', {
         inGuild: interaction.inGuild(),
         guildId: interaction.guildId,
-        guildName: interaction.guild?.name ?? null,
+        guildObjectAvailable: Boolean(interaction.guild),
         userId: interaction.user.id
       });
 
-      // A guild ID is the reliable test for a server-scoped interaction.
+      // The guild ID is authoritative. Discord interactions can have a valid
+      // guildId even when discord.js has not populated interaction.guild.
       if (!interaction.guildId) {
         await interaction.reply({
           content: 'Please run /setupserver inside the Discord server you want to set up.',
-          flags: 64
-        }).catch(error => console.error('[NexusGuard Setup] Context reply failed:', error));
+          ephemeral: true
+        }).catch(error => console.error('[NexusGuard Setup] Context reply failed:', error.message));
         return;
       }
 
-      // Acknowledge promptly so Discord does not expire the interaction.
+      // Acknowledge first, before fetching the guild or doing any API work.
       try {
-        await interaction.deferReply({ flags: 64 });
+        await interaction.deferReply({ ephemeral: true });
       } catch (error) {
-        console.error('[NexusGuard Setup] Could not acknowledge interaction:', error);
+        console.error('[NexusGuard Setup] Initial acknowledgement failed:', {
+          code: error.code,
+          message: error.message,
+          guildId: interaction.guildId
+        });
         return;
       }
 
       try {
         const guild = interaction.guild || await client.guilds.fetch(interaction.guildId);
+        const permissions = interaction.memberPermissions;
 
-        if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+        if (!permissions?.has(PermissionFlagsBits.Administrator)) {
           await interaction.editReply({
             content: 'Only server administrators can run /setupserver.'
           });
@@ -1010,14 +1000,13 @@ function registerSetupCommand(client) {
         }
 
         const result = await setupServer(guild, interaction.user);
-
         const embed = new EmbedBuilder()
           .setColor(ACCENT)
           .setTitle('✦ NexusGuard Setup Complete')
           .setDescription([
-            'The server layout has been checked and created.',
-            '',
             `Server: **${guild.name}**`,
+            '',
+            'The server layout has been checked and created.',
             '',
             `**New roles:** ${result.created.roles}`,
             `**New categories:** ${result.created.categories}`,
@@ -1027,45 +1016,34 @@ function registerSetupCommand(client) {
             'Existing matching roles and channels were reused.',
             'Review role positions and test channel permissions.'
           ].join('\n'))
-          .setFooter({
-            text: 'NexusGuard • Purple × Cyan'
-          });
+          .setFooter({ text: 'NexusGuard • Purple × Cyan' });
 
-        await interaction.editReply({
-          embeds: [embed]
-        });
+        await interaction.editReply({ embeds: [embed] });
+        console.log(`[NexusGuard Setup] Completed for ${guild.name} (${guild.id}).`);
       } catch (error) {
-        console.error('[NexusGuard Setup]', error);
-
+        console.error('[NexusGuard Setup] Setup failed:', error);
         await interaction.editReply({
-          content:
-            `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
-        }).catch(() => {});
+          content: `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
+        }).catch(editError => {
+          console.error('[NexusGuard Setup] Could not send final error:', editError.message);
+        });
       }
-
       return;
     }
 
-    /*
-     * Ticket button handler.
-     */
+    // Ticket buttons are handled here too; non-ticket interactions are ignored.
+    if (!interaction.isButton() || !interaction.customId?.startsWith('nexus_ticket_')) {
+      return;
+    }
+
     try {
       await handleTicketButton(interaction);
     } catch (error) {
-      console.error(
-        '[NexusGuard Ticket Interaction]',
-        error
-      );
-
-      if (
-        interaction.isRepliable() &&
-        !interaction.replied &&
-        !interaction.deferred
-      ) {
+      console.error('[NexusGuard Ticket Interaction] Handler failed:', error);
+      if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
         await interaction.reply({
-          content:
-            'Something went wrong while processing that action.',
-          flags: 64
+          content: 'Something went wrong while processing that action.',
+          ephemeral: true
         }).catch(() => {});
       }
     }
