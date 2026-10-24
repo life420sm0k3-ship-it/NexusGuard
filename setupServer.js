@@ -837,15 +837,11 @@ function registerSetupCommand(client) {
         });
 
         try {
-          const guild = await interaction.client.guilds.fetch(
-  interaction.guildId
-);
+          const guild = interaction.guild;
 
-const guildId = interaction.guildId;
-
-if (!guildId) {
+if (!guild || !interaction.guildId) {
   await interaction.editReply({
-    content: "Please run /setupserver inside your Discord server."
+    content: 'I could not identify the Discord server. Please run /setupserver again inside your server.'
   });
   return;
 }
