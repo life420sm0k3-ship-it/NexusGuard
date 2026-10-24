@@ -70,6 +70,7 @@ const DEFAULT_SETTINGS = {
   automodEnabled: false,
   announcementChannel: "",
   moderatorRole: "",
+  moderatorRoles: [],
   accentColor: "#8b5cf6"
 };
 
@@ -120,6 +121,20 @@ function has(member, permission) { return Boolean(member?.permissions?.has(permi
 const commands = [
   new SlashCommandBuilder().setName("website").setDescription("Get the NexusGuard dashboard link"),
   new SlashCommandBuilder().setName("help").setDescription("Show NexusGuard commands"),
+  new SlashCommandBuilder().setName("commands").setDescription("Display the complete categorized command directory"),
+  // Intentional no-action category dividers: these only label command groups in Discord.
+  new SlashCommandBuilder().setName("general").setDescription("━━━━━━━━ GENERAL COMMANDS · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("server-tools").setDescription("━━━━━━━━ SERVER TOOLS · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("moderation-tools").setDescription("━━━━━━━━ MODERATION · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("roles").setDescription("━━━━━━━━ ROLES & MEMBERS · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("tickets").setDescription("━━━━━━━━ TICKETS · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("community").setDescription("━━━━━━━━ COMMUNITY · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("automod").setDescription("━━━━━━━━ AUTOMOD & SECURITY · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("levels").setDescription("━━━━━━━━ LEVELS & XP · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("economy").setDescription("━━━━━━━━ ECONOMY · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("fun").setDescription("━━━━━━━━ FUN & GAMES · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("configuration").setDescription("━━━━━━━━ CONFIGURATION · CATEGORY DIVIDER ━━━━━━━━"),
+  new SlashCommandBuilder().setName("owner").setDescription("━━━━━━━━ OWNER-ONLY TOOLS · CATEGORY DIVIDER ━━━━━━━━"),
   new SlashCommandBuilder().setName("invite").setDescription("Get the NexusGuard invite link"),
   new SlashCommandBuilder().setName("ping").setDescription("Check bot latency"),
   new SlashCommandBuilder().setName("botinfo").setDescription("View bot information"),
@@ -194,6 +209,34 @@ const commands = [
   new SlashCommandBuilder().setName("rps").setDescription("Play rock paper scissors")
     .addStringOption(o => o.setName("choice").setDescription("Your move").setRequired(true)
       .addChoices({name:"Rock",value:"rock"},{name:"Paper",value:"paper"},{name:"Scissors",value:"scissors"}))
+  ,new SlashCommandBuilder().setName("nickname").setDescription("Change a member nickname")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageNicknames)
+    .addUserOption(o=>o.setName("member").setDescription("Member").setRequired(true))
+    .addStringOption(o=>o.setName("nickname").setDescription("New nickname (blank is not supported)").setRequired(true).setMaxLength(32)),
+  new SlashCommandBuilder().setName("roleadd").setDescription("Give a role to a member")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+    .addUserOption(o=>o.setName("member").setDescription("Member").setRequired(true))
+    .addRoleOption(o=>o.setName("role").setDescription("Role to add").setRequired(true)),
+  new SlashCommandBuilder().setName("roleremove").setDescription("Remove a role from a member")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+    .addUserOption(o=>o.setName("member").setDescription("Member").setRequired(true))
+    .addRoleOption(o=>o.setName("role").setDescription("Role to remove").setRequired(true)),
+  new SlashCommandBuilder().setName("clearwarnings").setDescription("Clear recorded warnings for a member")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .addUserOption(o=>o.setName("member").setDescription("Member").setRequired(true)),
+  new SlashCommandBuilder().setName("memberstats").setDescription("View member account and server stats")
+    .addUserOption(o=>o.setName("member").setDescription("Member").setRequired(false)),
+  new SlashCommandBuilder().setName("topic").setDescription("Set this channel topic")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+    .addStringOption(o=>o.setName("text").setDescription("New channel topic").setRequired(true).setMaxLength(1024)),
+  new SlashCommandBuilder().setName("remind").setDescription("Set a short reminder in this channel")
+    .addIntegerOption(o=>o.setName("minutes").setDescription("Minutes from now (1-1440)").setRequired(true).setMinValue(1).setMaxValue(1440))
+    .addStringOption(o=>o.setName("message").setDescription("Reminder text").setRequired(true).setMaxLength(500)),
+  new SlashCommandBuilder().setName("embed").setDescription("Post a styled embed")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
+    .addStringOption(o=>o.setName("title").setDescription("Embed title").setRequired(true).setMaxLength(256))
+    .addStringOption(o=>o.setName("description").setDescription("Embed description").setRequired(true).setMaxLength(3500)),
+  new SlashCommandBuilder().setName("serverstats").setDescription("View server stats")
 ].map(c => c.toJSON());
 
 async function registerCommands() {
@@ -268,7 +311,7 @@ client.on("interactionCreate", async i => {
   };
 
   try {
-    if (!i.inGuild() && !["website","help","invite","ping","botinfo","uptime"].includes(n)) {
+    if (!i.inGuild() && !["website","help","commands","invite","ping","botinfo","uptime"].includes(n)) {
       return i.reply({ content: "Use this command inside a server.", ephemeral: true });
     }
 
@@ -282,13 +325,19 @@ client.on("interactionCreate", async i => {
       return i.reply({ content: `Invite NexusGuard: ${u}`, ephemeral: true });
     }
 
-    if (n === "help") {
+    const dividerNames = new Set(["general","server-tools","moderation-tools","roles","tickets","community","automod","levels","economy","fun","configuration","owner"]);
+    if (dividerNames.has(n)) {
+      // A separator is intentionally non-functional; acknowledge it so Discord does not show "interaction failed".
+      return i.reply({ content: `━━━━━━━━━━ ${n.replace(/-/g, " ").toUpperCase()} COMMANDS ━━━━━━━━━━`, ephemeral: true });
+    }
+
+    if (n === "commands" || n === "help") {
       const e = new EmbedBuilder().setColor(0x8b5cf6).setTitle("🛡️ NexusGuard Commands")
         .setDescription(
-          "**General:** /website /help /invite /ping /botinfo /uptime\n\n" +
-          "**Server:** /serverinfo /membercount /servericon /userinfo /avatar /roleinfo /channelinfo /rolelist /channellist\n\n" +
-          "**Moderation:** /warn /warnings /timeout /untimeout /kick /ban /unban /purge /lock /unlock /slowmode\n\n" +
-          "**Community:** /poll /announce /say /settings\n\n" +
+          "**GENERAL:** /website /help /commands /invite /ping /botinfo /uptime\n`/general` is a category divider only.\n\n" +
+          "**SERVER TOOLS:** /serverinfo /serverstats /membercount /servericon /userinfo /memberstats /avatar /roleinfo /channelinfo /rolelist /channellist /topic\n`/server-tools` is a category divider only.\n\n" +
+          "**MODERATION:** /warn /warnings /clearwarnings /timeout /untimeout /kick /ban /unban /purge /lock /unlock /slowmode\n`/moderation-tools` is a category divider only.\n\n" +
+          "**ROLES & MEMBERS:** /nickname /roleadd /roleremove /userinfo /memberstats\n**COMMUNITY:** /poll /announce /say /embed /remind /settings\n**DIVIDERS:** /general /server-tools /moderation-tools /roles /tickets /community /automod /levels /economy /fun /configuration /owner (labels only; no actions)\n\n" +
           "**Fun:** /coinflip /dice /eightball /choose /rate /rps"
         );
       return i.reply({ embeds: [e], ephemeral: true });
@@ -459,6 +508,61 @@ client.on("interactionCreate", async i => {
       else if(player!==bot) result="NexusGuard wins!";
       return i.reply(`You chose **${player}**. I chose **${bot}**. ${result}`);
     }
+    if (n === "nickname") {
+      const actor=await i.guild.members.fetch(i.user.id), bot=await i.guild.members.fetchMe(), u=i.options.getUser("member",true), target=await i.guild.members.fetch(u.id), nick=i.options.getString("nickname",true);
+      if(!has(actor,PermissionFlagsBits.ManageNicknames)||!has(bot,PermissionFlagsBits.ManageNicknames)) return i.reply({content:"You and NexusGuard need Manage Nicknames permission.",ephemeral:true});
+      if(!target.manageable) return i.reply({content:"I cannot change this member's nickname because of role hierarchy.",ephemeral:true});
+      await target.setNickname(nick,`Changed by ${i.user.tag}`); await audit(i.guildId,i.user.id,"member.nickname_changed",u.id,{nickname:nick});
+      return i.reply({content:`Nickname updated for **${u.username}**.`,ephemeral:true});
+    }
+    if (n === "roleadd" || n === "roleremove") {
+      const actor=await i.guild.members.fetch(i.user.id), bot=await i.guild.members.fetchMe(), u=i.options.getUser("member",true), role=i.options.getRole("role",true), target=await i.guild.members.fetch(u.id);
+      if(!has(actor,PermissionFlagsBits.ManageRoles)||!has(bot,PermissionFlagsBits.ManageRoles)) return i.reply({content:"You and NexusGuard need Manage Roles permission.",ephemeral:true});
+      if(role.managed||role.position>=bot.roles.highest.position) return i.reply({content:"I cannot manage that role. Check integration status and role hierarchy.",ephemeral:true});
+      if(n==="roleadd") await target.roles.add(role,`Granted by ${i.user.tag}`); else await target.roles.remove(role,`Removed by ${i.user.tag}`);
+      await audit(i.guildId,i.user.id,n==="roleadd"?"member.role_added":"member.role_removed",u.id,{roleId:role.id});
+      return i.reply({content:`${n==="roleadd"?"Added":"Removed"} **${role.name}** ${n==="roleadd"?"to":"from"} **${u.username}**.`,ephemeral:true});
+    }
+    if (n === "clearwarnings") {
+      const actor=await i.guild.members.fetch(i.user.id), u=i.options.getUser("member",true);
+      if(!has(actor,PermissionFlagsBits.ModerateMembers)) return i.reply({content:"You need Moderate Members permission.",ephemeral:true});
+      const r=await pool.query("DELETE FROM warnings WHERE guild_id=$1 AND user_id=$2",[i.guildId,u.id]);
+      await audit(i.guildId,i.user.id,"member.warnings_cleared",u.id,{count:r.rowCount});
+      return i.reply({content:`Cleared ${r.rowCount} warning record(s) for **${u.username}**.`,ephemeral:true});
+    }
+    if (n === "memberstats") {
+      const u=i.options.getUser("member")||i.user, member=await i.guild.members.fetch(u.id).catch(()=>null);
+      const r=await pool.query("SELECT COUNT(*)::int AS count FROM warnings WHERE guild_id=$1 AND user_id=$2",[i.guildId,u.id]);
+      const e=new EmbedBuilder().setColor(0x51e1e5).setTitle(`Member stats · ${u.username}`).setThumbnail(u.displayAvatarURL({size:256}))
+        .addFields({name:"Account created",value:`<t:${Math.floor(u.createdTimestamp/1000)}:R>`,inline:true},{name:"Joined server",value:member?.joinedTimestamp?`<t:${Math.floor(member.joinedTimestamp/1000)}:R>`:"Not in server",inline:true},{name:"Recorded warnings",value:String(r.rows[0]?.count||0),inline:true},{name:"Highest role",value:member?.roles.highest?.name||"Unknown",inline:true});
+      return i.reply({embeds:[e],ephemeral:true});
+    }
+    if (n === "topic") {
+      const actor=await i.guild.members.fetch(i.user.id), bot=await i.guild.members.fetchMe();
+      if(!has(actor,PermissionFlagsBits.ManageChannels)||!has(bot,PermissionFlagsBits.ManageChannels)) return i.reply({content:"You and NexusGuard need Manage Channels permission.",ephemeral:true});
+      if(!i.channel?.setTopic) return i.reply({content:"This channel does not support a topic.",ephemeral:true});
+      await i.channel.setTopic(i.options.getString("text",true)); await audit(i.guildId,i.user.id,"channel.topic_changed",i.channelId);
+      return i.reply({content:"Channel topic updated.",ephemeral:true});
+    }
+    if (n === "remind") {
+      const minutes=i.options.getInteger("minutes",true), message=i.options.getString("message",true), who=i.user;
+      await i.reply({content:`⏰ Reminder set for ${minutes} minute(s). Note: reminders are held in memory and won't survive a bot restart.`,ephemeral:true});
+      setTimeout(()=>{ if(i.channel?.isTextBased()) i.channel.send({content:`⏰ <@${who.id}> Reminder: ${message}`,allowedMentions:{users:[who.id]}}).catch(()=>{}); },minutes*60000);
+      return;
+    }
+    if (n === "embed") {
+      const actor=await i.guild.members.fetch(i.user.id);
+      if(!has(actor,PermissionFlagsBits.ManageMessages)) return i.reply({content:"You need Manage Messages permission.",ephemeral:true});
+      const title=i.options.getString("title",true), description=i.options.getString("description",true);
+      await i.channel.send({embeds:[new EmbedBuilder().setColor(0x8b5cf6).setTitle(title).setDescription(description).setFooter({text:`Posted by ${i.user.username}`}).setTimestamp()],allowedMentions:{parse:[]}});
+      await audit(i.guildId,i.user.id,"message.embed_posted",i.channelId); return i.reply({content:"Embed posted.",ephemeral:true});
+    }
+    if (n === "serverstats") {
+      const g=i.guild, channels=g.channels.cache, roles=g.roles.cache.filter(r=>r.id!==g.id), bots=g.members.cache.filter(m=>m.user.bot).size;
+      const e=new EmbedBuilder().setColor(0x8b5cf6).setTitle(`📊 ${g.name} · Server stats`).setThumbnail(g.iconURL({size:256}))
+        .addFields({name:"Members",value:String(g.memberCount),inline:true},{name:"Cached bots",value:String(bots),inline:true},{name:"Roles",value:String(roles.size),inline:true},{name:"Channels",value:String(channels.size),inline:true},{name:"Boosts",value:String(g.premiumSubscriptionCount||0),inline:true},{name:"Verification",value:String(g.verificationLevel),inline:true});
+      return i.reply({embeds:[e],ephemeral:true});
+    }
   } catch (error) {
     await replyError(error);
   }
@@ -578,7 +682,12 @@ app.get("/api/guild/:guildId",requireLogin,guildAccess,async(req,res,next)=>{
   try {
     const guild=client.guilds.cache.get(req.guildId), settings=await getSettings(req.guildId);
     const logs=await pool.query("SELECT id,actor_id,action,target_id,details,created_at FROM audit_log WHERE guild_id=$1 ORDER BY created_at DESC LIMIT 50",[req.guildId]);
-    res.json({guild:{id:guild.id,name:guild.name,icon:guild.iconURL({size:256}),memberCount:guild.memberCount},settings,logs:logs.rows});
+    const channels=[...guild.channels.cache.values()]
+      .filter(c=>[ChannelType.GuildText,ChannelType.GuildAnnouncement,ChannelType.GuildForum,ChannelType.GuildVoice,ChannelType.GuildStageVoice].includes(c.type))
+      .sort((a,b)=>(a.parent?.rawPosition??-1)-(b.parent?.rawPosition??-1)||a.rawPosition-b.rawPosition)
+      .map(c=>({id:c.id,name:c.name,type:c.type,parentId:c.parentId,parentName:c.parent?.name||""}));
+    const roles=[...guild.roles.cache.values()].filter(r=>r.id!==guild.id).sort((a,b)=>b.position-a.position).map(r=>({id:r.id,name:r.name,color:r.hexColor}));
+    res.json({guild:{id:guild.id,name:guild.name,icon:guild.iconURL({size:256}),memberCount:guild.memberCount},settings,logs:logs.rows,channels,roles});
   } catch(e){next(e);}
 });
 app.put("/api/guild/:guildId/settings",requireLogin,guildAccess,async(req,res,next)=>{
@@ -588,8 +697,23 @@ app.put("/api/guild/:guildId/settings",requireLogin,guildAccess,async(req,res,ne
     const strKeys=["welcomeChannel","welcomeMessage","logsChannel","moderatorRole","announcementChannel","accentColor"];
     for(const k of boolKeys) if(Object.hasOwn(body,k)){if(typeof body[k]!=="boolean")return res.status(400).json({error:`${k} must be true or false.`});settings[k]=body[k];}
     for(const k of strKeys) if(Object.hasOwn(body,k)){if(typeof body[k]!=="string"||body[k].length>500)return res.status(400).json({error:`Invalid ${k}.`});settings[k]=body[k];}
+    const selectedGuild=client.guilds.cache.get(req.guildId);
+    for(const k of ["welcomeChannel","logsChannel","announcementChannel"]) {
+      if(settings[k] && !selectedGuild.channels.cache.has(settings[k])) return res.status(400).json({error:`Choose a valid channel from this server for ${k}.`});
+    }
+    if(Object.hasOwn(body,"moderatorRoles")) {
+      if(!Array.isArray(body.moderatorRoles) || body.moderatorRoles.length > 25 || body.moderatorRoles.some(id=>typeof id!=="string"))
+        return res.status(400).json({error:"Choose up to 25 valid moderator roles."});
+      const uniqueRoles=[...new Set(body.moderatorRoles)];
+      if(uniqueRoles.some(id=>!selectedGuild.roles.cache.has(id) || id===selectedGuild.id))
+        return res.status(400).json({error:"Every selected moderator role must belong to this server."});
+      settings.moderatorRoles=uniqueRoles;
+      settings.moderatorRole=uniqueRoles[0]||""; // Backwards compatibility with older settings.
+    } else if(settings.moderatorRole && !selectedGuild.roles.cache.has(settings.moderatorRole)) {
+      return res.status(400).json({error:"Choose a valid role from this server."});
+    }
     await saveSettings(req.guildId,settings);
-    await audit(req.guildId,req.session.user.id,"settings.updated",null,{keys:[...boolKeys,...strKeys].filter(k=>Object.hasOwn(body,k))});
+    await audit(req.guildId,req.session.user.id,"settings.updated",null,{keys:[...boolKeys,...strKeys,...(Object.hasOwn(body,"moderatorRoles")?["moderatorRoles"]:[])]});
     res.json({ok:true,settings});
   } catch(e){next(e);}
 });
@@ -615,7 +739,7 @@ app.get("/",(req,res)=>{
 :root{color-scheme:dark;--bg:#090b13;--panel:#101522;--panel2:#151c2c;--line:#263148;--purple:#a78bfa;--cyan:#67e8f9;--text:#f4f7ff;--muted:#98a6bf;--green:#6ee7b7;--red:#fb7185;--shadow:0 22px 70px #0005}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 10% 0%,#30204c66,transparent 34%),radial-gradient(ellipse at 100% 20%,#0d536044,transparent 30%),var(--bg);color:var(--text);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;background-image:linear-gradient(#8793ae18 1px,transparent 1px),linear-gradient(90deg,#8793ae18 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(#000,transparent 80%)}
-a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button,a.btn{border:1px solid transparent;border-radius:12px;padding:11px 15px;background:linear-gradient(110deg,#8b5cf6,#6366f1);color:white;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .18s,border-color .18s,filter .18s;text-decoration:none}button:hover,a.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}button:disabled{opacity:.5;cursor:wait;transform:none}.btn-ghost{background:#151c2c!important;border-color:#303b52!important;box-shadow:none!important}.btn-danger{background:#351722!important;border-color:#673044!important}.hidden{display:none!important}
+a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}select[multiple]{min-height:125px;padding:8px}select[multiple] option{padding:7px;border-radius:6px}button,a.btn{border:1px solid transparent;border-radius:12px;padding:11px 15px;background:linear-gradient(110deg,#8b5cf6,#6366f1);color:white;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .18s,border-color .18s,filter .18s;text-decoration:none}button:hover,a.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}button:disabled{opacity:.5;cursor:wait;transform:none}.btn-ghost{background:#151c2c!important;border-color:#303b52!important;box-shadow:none!important}.btn-danger{background:#351722!important;border-color:#673044!important}.hidden{display:none!important}
 .topbar{position:sticky;top:0;z-index:10;height:72px;padding:0 clamp(14px,4vw,44px);display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #283149b8;background:#090b13d9;backdrop-filter:blur(20px)}.brand{display:flex;align-items:center;gap:11px;font-weight:950;letter-spacing:1.8px;font-size:14px}.logo{display:grid;place-items:center;width:39px;height:39px;border-radius:13px;background:linear-gradient(145deg,#a78bfa,#4f46e5 58%,#22d3ee);box-shadow:0 0 28px #8b5cf644;font-size:22px;font-style:italic}.brand span{color:var(--cyan)}.top-right{display:flex;align-items:center;gap:10px}.live-pill{display:flex;align-items:center;gap:8px;border:1px solid #244a43;background:#10251f;color:var(--green);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.8px}.dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}
 .layout{position:relative;max-width:1450px;margin:auto;padding:28px clamp(12px,3vw,36px) 60px;display:grid;grid-template-columns:245px minmax(0,1fr);gap:24px}.sidebar{align-self:start;position:sticky;top:96px;border:1px solid var(--line);background:#0e1320e8;border-radius:20px;padding:18px;box-shadow:var(--shadow)}.side-brand{font-size:10px;color:#66758f;letter-spacing:1.7px;font-weight:900;padding:4px 10px 12px}.nav{display:grid;gap:5px}.nav button{justify-content:flex-start;background:transparent;color:#aab6cc;border:1px solid transparent;box-shadow:none;padding:11px 12px;font-weight:700;text-align:left}.nav button.active,.nav button:hover{background:linear-gradient(90deg,#8b5cf622,#22d3ee0c);border-color:#6454a34d;color:white}.nav .ico{width:24px;font-size:16px}.side-bottom{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}.profile{display:flex;align-items:center;gap:10px;min-width:0}.avatar{width:36px;height:36px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,#a78bfa,#22d3ee);display:grid;place-items:center;font-weight:900;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}.profile-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profile-sub{font-size:11px;color:var(--muted)}.main{min-width:0}.welcome{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:3px 0 24px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--cyan);font-weight:900;text-transform:uppercase}.welcome h1{font-size:clamp(28px,4vw,42px);letter-spacing:-1.6px;line-height:1.1;margin:9px 0}.welcome p{color:var(--muted);margin:0;max-width:650px}.owner-label{display:inline-flex;align-items:center;gap:7px;border:1px solid #6e4d9a;background:#291b42;color:#d8c7ff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:900;letter-spacing:.6px;white-space:nowrap}.hero{position:relative;overflow:hidden;border:1px solid #4c4777;background:linear-gradient(115deg,#1b1930 0%,#141d31 54%,#10242d 100%);border-radius:22px;padding:clamp(22px,4vw,34px);box-shadow:var(--shadow)}.hero:after{content:"N";position:absolute;right:3%;top:-45px;font-size:clamp(160px,22vw,280px);line-height:1;font-weight:1000;color:#c4b5fd08;transform:skew(-10deg);pointer-events:none}.hero-inner{position:relative;z-index:1;max-width:720px}.hero h2{font-size:clamp(25px,3.5vw,36px);line-height:1.16;letter-spacing:-1px;margin:12px 0}.hero p{color:#b5c1d6;max-width:600px;margin:0 0 20px}.actions{display:flex;flex-wrap:wrap;gap:8px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:17px 0 22px}.metric,.panel,.server-card{border:1px solid var(--line);background:linear-gradient(145deg,#121827f2,#0e1421f2);border-radius:17px;box-shadow:0 12px 35px #0002}.metric{padding:18px;min-width:0}.metric-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}.metric-icon{display:grid;place-items:center;width:33px;height:33px;border-radius:11px;background:#8b5cf61a;color:#c4b5fd;font-size:16px}.metric-value{font-size:clamp(22px,3vw,32px);font-weight:950;letter-spacing:-1px;margin-top:13px;overflow-wrap:anywhere}.metric-foot{font-size:11px;color:#71809a;margin-top:3px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 0 13px}.section-head h2{font-size:19px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:3px 0 0}.panel{padding:21px;margin-top:16px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.panel h2,.panel h3{margin:0;font-size:17px}.muted{color:var(--muted)}.tiny{font-size:11px}.server-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.server-card{padding:16px;display:flex;align-items:center;gap:13px;text-align:left;min-width:0;transition:border-color .2s,transform .2s;cursor:pointer}.server-card:hover{border-color:#8b5cf6;transform:translateY(-2px)}.server-card.selected{border-color:#8b5cf6;background:linear-gradient(135deg,#221b3c,#101b2a)}.server-icon{width:46px;height:46px;flex-shrink:0;border-radius:15px;background:#222b40;display:grid;place-items:center;font-weight:900;font-size:17px;overflow:hidden}.server-icon img{width:100%;height:100%;object-fit:cover}.server-name{font-weight:850;overflow-wrap:anywhere}.server-meta{font-size:11px;color:var(--muted);margin-top:3px}.server-arrow{margin-left:auto;color:#72819b;font-size:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap}.toolbar select{flex:1;min-width:180px}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label.field{display:block;color:#d6deed;font-weight:750;font-size:12px;margin:12px 0}input[type=text],input[type=number],select,textarea{width:100%;padding:12px 13px;background:#090e19;color:var(--text);border:1px solid #303c54;border-radius:11px;margin-top:7px;outline:none}textarea{min-height:100px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px #a78bfa20}.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #273148}.toggle-row:last-child{border-bottom:0}.toggle-title{font-weight:800}.toggle-desc{font-size:11px;color:var(--muted);margin-top:3px}.switch{appearance:none;width:43px;height:25px;flex-shrink:0;border-radius:99px;background:#30394c;position:relative;cursor:pointer;transition:.2s}.switch:before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;border-radius:50%;background:white;transition:.2s}.switch:checked{background:#8b5cf6}.switch:checked:before{transform:translateX(18px)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:460px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #252f44;font-size:12px}th{color:#9eacc4;background:#121a29;font-size:10px;text-transform:uppercase;letter-spacing:1px}tr:last-child td{border-bottom:0}.event{font-weight:800}.tag{display:inline-flex;border-radius:8px;padding:4px 8px;background:#1b2940;color:#a9c8ff;font-size:10px;font-weight:850}.empty{padding:28px 12px;text-align:center;border:1px dashed #34415c;border-radius:14px;color:var(--muted)}.notice{padding:12px 14px;border:1px solid #28574b;background:#10261f;border-radius:12px;color:#a7f3d0;font-size:12px;margin:12px 0}.error{border-color:#713344;background:#2b1520;color:#fecdd3}.footer{text-align:center;padding:20px;color:#66758d;font-size:11px}.mobile-nav{display:none}
 @media(max-width:1050px){.layout{grid-template-columns:205px minmax(0,1fr);gap:15px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.server-grid{grid-template-columns:1fr}}
@@ -651,7 +775,7 @@ async function loadGuilds(){if(!SIGNED_IN)return;try{guilds=await api("/api/guil
 function switchView(view){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!=="view-"+view));document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));if(view==="settings"&&!selectedGuild)$("settingsSubtitle").textContent="Choose a server in My servers first.";if(view==="owner"&&IS_OWNER)loadOwnerStats();window.scrollTo({top:0,behavior:"smooth"})}
 async function chooseGuild(id,navigate=true){selectedGuild=id;const g=guilds.find(x=>x.id===id);$("serverSelect").value=id;renderGuilds();if(!id)return;try{const d=await api("/api/guild/"+encodeURIComponent(id));guildDetails=d;$("mActivity").textContent=String((d.logs||[]).length);$("mProtection").textContent=[d.settings.welcomeEnabled,d.settings.logsEnabled,d.settings.automodEnabled].filter(Boolean).length+"/3";$("settingsSubtitle").textContent=d.guild.name+" · "+(d.guild.memberCount??"")+" members";renderSettings(d);renderActivity(d.logs||[]);if(navigate)switchView("settings")}catch(e){$("settingsPanel").replaceChildren(node("div",e.message,"empty error"));if(navigate)switchView("settings")}}
 function renderSettings(d){const root=$("settingsPanel");root.replaceChildren();const toggles=[["welcomeEnabled","Welcome messages","Send a welcome when a member joins."],["logsEnabled","Join / event logging","Record supported events in your configured log channel."],["automodEnabled","Basic AutoMod","Enable the configured basic automod feature."]];const togglePanel=node("div");toggles.forEach(([key,title,desc])=>{const row=node("div",undefined,"toggle-row"),copy=node("div");copy.append(node("div",title,"toggle-title"),node("div",desc,"toggle-desc"));const input=document.createElement("input");input.type="checkbox";input.className="switch";input.checked=Boolean(d.settings[key]);input.setAttribute("aria-label",title);input.addEventListener("change",async()=>{input.disabled=true;try{const r=await api("/api/guild/"+encodeURIComponent(selectedGuild)+"/settings",{method:"PUT",body:JSON.stringify({[key]:input.checked})});d.settings=r.settings;showNotice(root,title+" updated.")}catch(e){input.checked=!input.checked;showNotice(root,e.message,true)}finally{input.disabled=false}});row.append(copy,input);togglePanel.append(row)});root.append(node("h3","Protection controls"),togglePanel);
-const fields=[["welcomeChannel","Welcome channel ID","text"],["welcomeMessage","Welcome message","textarea"],["logsChannel","Log channel ID","text"],["moderatorRole","Moderator role ID","text"],["announcementChannel","Announcement channel ID","text"]];const form=node("div");form.className="field-grid";const inputs={};fields.forEach(([key,title,type])=>{const label=node("label",title,"field");let input=type==="textarea"?document.createElement("textarea"):document.createElement("input");if(type!=="textarea")input.type="text";input.value=d.settings[key]||"";input.placeholder=key==="welcomeMessage"?"Welcome {user} to {server}!":"Paste a Discord ID";label.append(input);form.append(label);inputs[key]=input});const save=node("button","Save configuration");save.style.marginTop="14px";save.addEventListener("click",async()=>{save.disabled=true;try{const body={};fields.forEach(([k])=>body[k]=inputs[k].value.trim());const r=await api("/api/guild/"+encodeURIComponent(selectedGuild)+"/settings",{method:"PUT",body:JSON.stringify(body)});d.settings=r.settings;showNotice(root,"Configuration saved successfully.");}catch(e){showNotice(root,e.message,true)}finally{save.disabled=false}});root.append(node("h3","Channels and messages"),form,save);root.append(node("p","Changes are saved to the NexusGuard database. Channel and role IDs must belong to this server.","tiny muted"))}
+const fields=[["welcomeChannel","Welcome channel","channel"],["welcomeMessage","Welcome message","textarea"],["logsChannel","Logging channel","channel"],["moderatorRoles","Moderator roles","roles"],["announcementChannel","Announcement channel","channel"]];const form=node("div");form.className="field-grid";const inputs={};fields.forEach(([key,title,type])=>{const label=node("label",title,"field");let input;if(type==="textarea"){input=document.createElement("textarea");input.rows=3;input.placeholder="Welcome {user} to {server}!"}else{input=document.createElement("select");if(type==="roles"){input.multiple=true;input.size=Math.min(7,Math.max(4,(d.roles||[]).length));input.setAttribute("aria-label","Select one or more moderator roles");input.title="Hold Ctrl/Command on desktop, or tap roles on mobile, to select multiple roles";const selected=new Set(d.settings.moderatorRoles|| (d.settings.moderatorRole?[d.settings.moderatorRole]:[]));(d.roles||[]).forEach(r=>{const opt=new Option(r.name,r.id);opt.selected=selected.has(r.id);input.append(opt)})}else{input.append(new Option("Disabled — don't send", ""));const opts=(d.channels||[]).filter(c=>c.type===0||c.type===5||c.type===15);opts.forEach(c=>{const prefix=c.type===5?"📣 ":c.type===15?"🗂 ":"# ";input.append(new Option(prefix+c.name+(c.parentName?" · "+c.parentName:""),c.id))});input.value=d.settings[key]||""}}input.dataset.setting=key;label.append(input);if(type==="roles"){const hint=node("span","Select as many moderator roles as you need.","tiny muted");label.append(hint)}form.append(label);inputs[key]=input});const save=node("button","Save configuration");save.style.marginTop="14px";save.addEventListener("click",async()=>{save.disabled=true;try{const body={};fields.forEach(([k,,type])=>body[k]=type==="roles"?Array.from(inputs[k].selectedOptions).map(o=>o.value):inputs[k].value.trim());const r=await api("/api/guild/"+encodeURIComponent(selectedGuild)+"/settings",{method:"PUT",body:JSON.stringify(body)});d.settings=r.settings;showNotice(root,"Configuration saved successfully.");}catch(e){showNotice(root,e.message,true)}finally{save.disabled=false}});root.append(node("h3","Channels, roles and messages"),form,save);root.append(node("p","Choose channels by name and select multiple roles when needed. Options are loaded directly from the selected Discord server.","tiny muted"))}
 function showNotice(root,message,isError=false){let n=root.querySelector(".notice");if(!n){n=node("div",undefined,"notice");root.prepend(n)}n.textContent=message;n.classList.toggle("error",isError)}
 function renderActivity(logs){const root=$("activityTable");root.replaceChildren();$("activitySubtitle").textContent=selectedGuild?(guildDetails?.guild?.name||"Selected server")+" · Recent audit records":"Select a server to view its activity.";if(!logs.length){root.append(node("div","No audit events have been recorded for this server yet.","empty"));return}const wrap=node("div",undefined,"table-wrap"),table=document.createElement("table"),thead=document.createElement("thead"),tr=document.createElement("tr");["Event","Actor","Time"].forEach(t=>tr.append(node("th",t)));thead.append(tr);table.append(thead);const tbody=document.createElement("tbody");logs.forEach(log=>{const row=document.createElement("tr");row.append(node("td",log.action||"Event","event"),node("td",log.actor_id||"System"),node("td",log.created_at?new Date(log.created_at).toLocaleString():"—"));tbody.append(row)});table.append(tbody);wrap.append(table);root.append(wrap)}
 async function loadOwnerStats(){if(!IS_OWNER)return;try{const s=await api("/api/owner/stats");$("oConfigured").textContent=s.configured_servers??"—";$("oWarnings").textContent=s.warning_records??"—";$("mActivity").textContent=s.audit_events??"—";$("mProtection").textContent=s.warning_records??"—";const box=$("ownerDetails");box.className="";box.replaceChildren();const table=document.createElement("table"),body=document.createElement("tbody");[["Bot status",s.botReady?"Online":"Offline"],["Connected servers",s.connectedGuilds],["Configured servers",s.configured_servers],["Audit events",s.audit_events],["Warning records",s.warning_records]].forEach(([a,b])=>{const tr=document.createElement("tr");tr.append(node("td",a),node("td",String(b)));body.append(tr)});table.append(body);box.append(table)}catch(e){$("ownerDetails").className="empty error";$("ownerDetails").textContent=e.message}}
