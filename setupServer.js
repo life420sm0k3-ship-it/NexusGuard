@@ -803,38 +803,34 @@ function registerSetupCommand(client) {
   });
 
   client.on('interactionCreate', async interaction => {
-    try {
-      if (
-        interaction.isChatInputCommand() &&
-        interaction.commandName === 'setupserver'
-      ) {
-        if (!interaction.inGuild()) {
-          await interaction.reply({
-            content:
-              'Use this command inside your Discord server.',
-            ephemeral: true
-          });
+    
+try {
+  if (
+    interaction.isChatInputCommand() &&
+    interaction.commandName === 'setupserver'
+  ) {
+    // Acknowledge the command immediately.
+    await interaction.deferReply({
+  flags: 64
+});
 
-          return;
-        }
+    if (!interaction.inGuild() || !interaction.guild) {
+      await interaction.editReply({
+        content: 'Use this command inside your Discord server.'
+      });
+      return;
+    }
 
-        if (
-          !interaction.memberPermissions?.has(
-            PermissionFlagsBits.Administrator
-          )
-        ) {
-          await interaction.reply({
-            content:
-              'Only server administrators can run this setup.',
-            ephemeral: true
-          });
-
-          return;
-        }
-
-        await interaction.deferReply({
-          ephemeral: true
-        });
+    if (
+      !interaction.memberPermissions?.has(
+        PermissionFlagsBits.Administrator
+      )
+    ) {
+      await interaction.editReply({
+        content: 'Only server administrators can run this setup.'
+      });
+      return;
+    }
 
         try {
           const guild = interaction.guild;
