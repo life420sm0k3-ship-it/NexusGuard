@@ -12,34 +12,161 @@ const {
 
 const ACCENT = 0x8B5CF6;
 const CYAN = 0x22D3EE;
-const SETUP_REASON = 'NexusGuard developer showcase setup';
+const SETUP_REASON = 'NexusGuard server setup';
 
 const ROLE_DEFINITIONS = [
-  // Decorative role dividers: no permissions and no members.
-  { name: '「━━━━ 👑 MANAGEMENT ━━━━」', color: 0xA78BFA, divider: true },
-  { name: 'Owner', color: 0xF59E0B, permissions: [PermissionFlagsBits.Administrator], hoist: true },
-  { name: 'Administrator', color: 0xEF4444, permissions: [PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.KickMembers, PermissionFlagsBits.BanMembers, PermissionFlagsBits.ModerateMembers], hoist: true },
-  { name: 'Head Administrator', color: 0xFB7185, permissions: [PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.KickMembers, PermissionFlagsBits.BanMembers, PermissionFlagsBits.ModerateMembers], hoist: true },
+  {
+    name: '「━━━━ 👑 MANAGEMENT ━━━━」',
+    color: 0xA78BFA,
+    divider: true
+  },
+  {
+    name: 'Owner',
+    color: 0xF59E0B,
+    permissions: [PermissionFlagsBits.Administrator],
+    hoist: true
+  },
+  {
+    name: 'Administrator',
+    color: 0xEF4444,
+    permissions: [
+      PermissionFlagsBits.ManageGuild,
+      PermissionFlagsBits.ManageChannels,
+      PermissionFlagsBits.ManageRoles,
+      PermissionFlagsBits.ViewAuditLog,
+      PermissionFlagsBits.KickMembers,
+      PermissionFlagsBits.BanMembers,
+      PermissionFlagsBits.ModerateMembers
+    ],
+    hoist: true
+  },
+  {
+    name: 'Head Administrator',
+    color: 0xFB7185,
+    permissions: [
+      PermissionFlagsBits.ManageChannels,
+      PermissionFlagsBits.ManageRoles,
+      PermissionFlagsBits.ViewAuditLog,
+      PermissionFlagsBits.KickMembers,
+      PermissionFlagsBits.BanMembers,
+      PermissionFlagsBits.ModerateMembers
+    ],
+    hoist: true
+  },
 
-  { name: '「━━━━ 🛡️ STAFF TEAM ━━━━」', color: 0xA78BFA, divider: true },
-  { name: 'Senior Moderator', color: 0xF97316, permissions: [PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.KickMembers, PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageMessages], hoist: true },
-  { name: 'Moderator', color: 0x22C55E, permissions: [PermissionFlagsBits.KickMembers, PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageMessages], hoist: true },
-  { name: 'Trial Moderator', color: 0x14B8A6, permissions: [PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageMessages] },
-  { name: 'Support Team', color: 0x38BDF8, permissions: [] },
-  { name: '「━━━━ 💻 CREATORS ━━━━」', color: 0xA78BFA, divider: true },
-  { name: 'Developer', color: 0x8B5CF6, permissions: [], hoist: true },
-  { name: 'Partner', color: 0xC084FC, permissions: [] },
-  { name: 'Client', color: 0x22D3EE, permissions: [] },
-  { name: 'Beta Tester', color: 0x10B981, permissions: [] },
-  { name: '「━━━━ 💜 COMMUNITY ━━━━」', color: 0xA78BFA, divider: true },
-  { name: 'VIP', color: 0xF472B6, permissions: [] },
-  { name: 'Verified Member', color: 0x60A5FA, permissions: [] },
-  { name: 'Community', color: 0x94A3B8, permissions: [] },
-  { name: 'New Member', color: 0x9CA3AF, permissions: [] },
-  { name: '「━━━━ ⚙️ SYSTEM ━━━━」', color: 0xA78BFA, divider: true },
-  { name: 'Bots', color: 0x64748B, permissions: [] },
-  { name: 'Muted', color: 0x6B7280, permissions: [] },
-  { name: 'Quarantined', color: 0x991B1B, permissions: [] }
+  {
+    name: '「━━━━ 🛡️ STAFF TEAM ━━━━」',
+    color: 0xA78BFA,
+    divider: true
+  },
+  {
+    name: 'Senior Moderator',
+    color: 0xF97316,
+    permissions: [
+      PermissionFlagsBits.ViewAuditLog,
+      PermissionFlagsBits.KickMembers,
+      PermissionFlagsBits.ModerateMembers,
+      PermissionFlagsBits.ManageMessages
+    ],
+    hoist: true
+  },
+  {
+    name: 'Moderator',
+    color: 0x22C55E,
+    permissions: [
+      PermissionFlagsBits.KickMembers,
+      PermissionFlagsBits.ModerateMembers,
+      PermissionFlagsBits.ManageMessages
+    ],
+    hoist: true
+  },
+  {
+    name: 'Trial Moderator',
+    color: 0x14B8A6,
+    permissions: [
+      PermissionFlagsBits.ModerateMembers,
+      PermissionFlagsBits.ManageMessages
+    ]
+  },
+  {
+    name: 'Support Team',
+    color: 0x38BDF8,
+    permissions: []
+  },
+
+  {
+    name: '「━━━━ 💻 CREATORS ━━━━」',
+    color: 0xA78BFA,
+    divider: true
+  },
+  {
+    name: 'Developer',
+    color: 0x8B5CF6,
+    permissions: [],
+    hoist: true
+  },
+  {
+    name: 'Partner',
+    color: 0xC084FC,
+    permissions: []
+  },
+  {
+    name: 'Client',
+    color: 0x22D3EE,
+    permissions: []
+  },
+  {
+    name: 'Beta Tester',
+    color: 0x10B981,
+    permissions: []
+  },
+
+  {
+    name: '「━━━━ 💜 COMMUNITY ━━━━」',
+    color: 0xA78BFA,
+    divider: true
+  },
+  {
+    name: 'VIP',
+    color: 0xF472B6,
+    permissions: []
+  },
+  {
+    name: 'Verified Member',
+    color: 0x60A5FA,
+    permissions: []
+  },
+  {
+    name: 'Community',
+    color: 0x94A3B8,
+    permissions: []
+  },
+  {
+    name: 'New Member',
+    color: 0x9CA3AF,
+    permissions: []
+  },
+
+  {
+    name: '「━━━━ ⚙️ SYSTEM ━━━━」',
+    color: 0xA78BFA,
+    divider: true
+  },
+  {
+    name: 'Bots',
+    color: 0x64748B,
+    permissions: []
+  },
+  {
+    name: 'Muted',
+    color: 0x6B7280,
+    permissions: []
+  },
+  {
+    name: 'Quarantined',
+    color: 0x991B1B,
+    permissions: []
+  }
 ];
 
 const CATEGORY_DEFINITIONS = [
@@ -58,7 +185,7 @@ const CATEGORY_DEFINITIONS = [
       ['bot-showcase', 'Showcase Discord bots'],
       ['website-showcase', 'Showcase websites and dashboards'],
       ['minecraft-projects', 'Minecraft builds, add-ons and tools'],
-      ['demos-and-media', 'Screenshots, videos and live demos'],
+      ['demos-and-media', 'Screenshots, videos and demos'],
       ['project-roadmap', 'Development updates and upcoming features']
     ]
   },
@@ -158,7 +285,7 @@ const hireEmbed = () =>
       '3. Discuss the scope, estimated cost, and timeframe.',
       '4. Approve the details before work begins.',
       '',
-      '**Important:** Prices and delivery dates are confirmed individually. Do not send passwords or bot tokens. A project is not accepted until the details are agreed upon.'
+      '**Important:** Prices and delivery dates are confirmed individually. Never send passwords or bot tokens.'
     ].join('\n'));
 
 const projectTemplate = kind =>
@@ -180,45 +307,57 @@ const projectTemplate = kind =>
 
 async function getOrCreateRole(guild, definition) {
   let role = guild.roles.cache.find(
-    r => r.name === definition.name
+    item => item.name === definition.name
   );
 
-  const permissionBits = definition.divider
+  const permissions = definition.divider
     ? []
-    : (definition.permissions || []);
+    : definition.permissions || [];
 
   if (role) {
-    // Reconcile configured role settings without changing unrelated roles.
     await role.edit({
       color: definition.color,
-      permissions: permissionBits,
+      permissions,
       mentionable: false,
-      hoist: Boolean(definition.hoist)
-    }, SETUP_REASON);
-    return { role: await guild.roles.fetch(role.id), created: false };
+      hoist: Boolean(definition.hoist),
+      reason: SETUP_REASON
+    });
+
+    role = await guild.roles.fetch(role.id);
+
+    return {
+      role,
+      created: false
+    };
   }
 
   role = await guild.roles.create({
     name: definition.name,
     color: definition.color,
-    permissions: permissionBits,
+    permissions,
     mentionable: false,
     hoist: Boolean(definition.hoist),
     reason: SETUP_REASON
   });
 
-  return { role, created: true };
+  return {
+    role,
+    created: true
+  };
 }
 
 async function getOrCreateCategory(guild, name, overwrites) {
   let category = guild.channels.cache.find(
-    c =>
-      c.type === ChannelType.GuildCategory &&
-      c.name === name
+    channel =>
+      channel.type === ChannelType.GuildCategory &&
+      channel.name === name
   );
 
   if (category) {
-    return { channel: category, created: false };
+    return {
+      channel: category,
+      created: false
+    };
   }
 
   category = await guild.channels.create({
@@ -228,7 +367,10 @@ async function getOrCreateCategory(guild, name, overwrites) {
     reason: SETUP_REASON
   });
 
-  return { channel: category, created: true };
+  return {
+    channel: category,
+    created: true
+  };
 }
 
 async function getOrCreateTextChannel(
@@ -238,14 +380,17 @@ async function getOrCreateTextChannel(
   overwrites
 ) {
   let channel = guild.channels.cache.find(
-    c =>
-      c.type === ChannelType.GuildText &&
-      c.name === name &&
-      c.parentId === parent.id
+    item =>
+      item.type === ChannelType.GuildText &&
+      item.name === name &&
+      item.parentId === parent.id
   );
 
   if (channel) {
-    return { channel, created: false };
+    return {
+      channel,
+      created: false
+    };
   }
 
   channel = await guild.channels.create({
@@ -256,7 +401,10 @@ async function getOrCreateTextChannel(
     reason: SETUP_REASON
   });
 
-  return { channel, created: true };
+  return {
+    channel,
+    created: true
+  };
 }
 
 async function sendStarterPost(channel, embed, marker) {
@@ -268,9 +416,7 @@ async function sendStarterPost(channel, embed, marker) {
 
   const exists = recent?.some(message =>
     message.author.id === channel.client.user.id &&
-    message.embeds.some(
-      item => item.footer?.text === marker
-    )
+    message.embeds.some(item => item.footer?.text === marker)
   );
 
   if (exists) return false;
@@ -278,17 +424,21 @@ async function sendStarterPost(channel, embed, marker) {
   const copy = EmbedBuilder.from(embed)
     .setFooter({ text: marker });
 
-  await channel.send({ embeds: [copy] });
+  await channel.send({
+    embeds: [copy]
+  });
 
   return true;
 }
 
 async function setupServer(guild, requester) {
-  const me =
-    guild.members.me ||
-    await guild.members.fetchMe();
+  if (!guild) {
+    throw new Error('The Discord server could not be identified.');
+  }
 
-  const required = [
+  const me = guild.members.me || await guild.members.fetchMe();
+
+  const requiredPermissions = [
     PermissionFlagsBits.ManageChannels,
     PermissionFlagsBits.ManageRoles,
     PermissionFlagsBits.ViewChannel,
@@ -297,11 +447,10 @@ async function setupServer(guild, requester) {
     PermissionFlagsBits.ReadMessageHistory
   ];
 
-  if (!me.permissions.has(required)) {
+  if (!me.permissions.has(requiredPermissions)) {
     throw new Error(
-      'NexusGuard needs Manage Channels, Manage Roles, ' +
-      'View Channel, Send Messages, Embed Links, and ' +
-      'Read Message History permissions.'
+      'NexusGuard needs Manage Channels, Manage Roles, View Channel, ' +
+      'Send Messages, Embed Links, and Read Message History permissions.'
     );
   }
 
@@ -315,10 +464,7 @@ async function setupServer(guild, requester) {
   const roles = {};
 
   for (const definition of ROLE_DEFINITIONS) {
-    const result = await getOrCreateRole(
-      guild,
-      definition
-    );
+    const result = await getOrCreateRole(guild, definition);
 
     roles[definition.name] = result.role;
 
@@ -333,16 +479,22 @@ async function setupServer(guild, requester) {
     roles['Head Administrator'],
     roles['Senior Moderator'],
     roles.Moderator,
+    roles['Trial Moderator'],
     roles['Support Team']
   ].filter(Boolean);
 
-  const announcementOnly = new Set([
-    'welcome', 'rules', 'announcements', 'server-guide',
-    'known-issues', 'services-and-prices', 'hire-me'
-  ]);
+  const memberRole =
+    roles['Verified Member'] || roles.Community;
 
-  const memberRole = roles['Verified Member'] || roles.Community;
-  const staffCanPost = staffRoles.filter(Boolean);
+  const announcementOnly = new Set([
+    'welcome',
+    'rules',
+    'announcements',
+    'server-guide',
+    'known-issues',
+    'services-and-prices',
+    'hire-me'
+  ]);
 
   const staffOverwrites = [
     {
@@ -356,37 +508,68 @@ async function setupServer(guild, requester) {
         PermissionFlagsBits.SendMessages,
         PermissionFlagsBits.ReadMessageHistory
       ]
-    }))
+    })),
+    {
+      id: me.id,
+      allow: [
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.ReadMessageHistory,
+        PermissionFlagsBits.ManageChannels,
+        PermissionFlagsBits.ManageMessages
+      ]
+    }
   ];
 
   const channelsByName = new Map();
 
   for (const definition of CATEGORY_DEFINITIONS) {
-    const overwrites = definition.staffOnly
-      ? staffOverwrites
-      : [
-          {
-            id: guild.roles.everyone.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
-            deny: [PermissionFlagsBits.SendMessages]
-          },
-          {
-            id: me.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
-          },
-          ...(memberRole ? [{
-            id: memberRole.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AddReactions, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks]
-          }] : []),
-          {
-            id: me.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
-          },
-          ...staffCanPost.map(role => ({
-            id: role.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages]
-          }))
-        ];
+    let overwrites;
+
+    if (definition.staffOnly) {
+      overwrites = staffOverwrites;
+    } else {
+      overwrites = [
+        {
+          id: guild.roles.everyone.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.ReadMessageHistory
+          ],
+          deny: [PermissionFlagsBits.SendMessages]
+        },
+        {
+          id: me.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.EmbedLinks,
+            PermissionFlagsBits.ManageMessages
+          ]
+        },
+        ...(memberRole ? [{
+          id: memberRole.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.AddReactions,
+            PermissionFlagsBits.AttachFiles,
+            PermissionFlagsBits.EmbedLinks
+          ]
+        }] : []),
+        ...staffRoles.map(role => ({
+          id: role.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.ManageMessages
+          ]
+        }))
+      ];
+    }
 
     const categoryResult = await getOrCreateCategory(
       guild,
@@ -394,8 +577,10 @@ async function setupServer(guild, requester) {
       overwrites
     );
 
-    // Apply permission overwrites to existing categories too.
-    await categoryResult.channel.permissionOverwrites.set(overwrites, SETUP_REASON);
+    await categoryResult.channel.permissionOverwrites.set(
+      overwrites,
+      SETUP_REASON
+    );
 
     const category = categoryResult.channel;
 
@@ -404,21 +589,36 @@ async function setupServer(guild, requester) {
     }
 
     for (const [name] of definition.channels) {
-      let channelOverwrites = definition.staffOnly ? staffOverwrites : overwrites;
+      let channelOverwrites = overwrites;
+
       if (!definition.staffOnly && announcementOnly.has(name)) {
         channelOverwrites = [
           {
             id: guild.roles.everyone.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.ReadMessageHistory
+            ],
             deny: [PermissionFlagsBits.SendMessages]
           },
           {
             id: me.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.ReadMessageHistory,
+              PermissionFlagsBits.EmbedLinks,
+              PermissionFlagsBits.ManageMessages
+            ]
           },
-          ...staffCanPost.map(role => ({
+          ...staffRoles.map(role => ({
             id: role.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages]
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.ReadMessageHistory,
+              PermissionFlagsBits.ManageMessages
+            ]
           }))
         ];
       }
@@ -429,7 +629,11 @@ async function setupServer(guild, requester) {
         category,
         channelOverwrites
       );
-      await result.channel.permissionOverwrites.set(channelOverwrites, SETUP_REASON);
+
+      await result.channel.permissionOverwrites.set(
+        channelOverwrites,
+        SETUP_REASON
+      );
 
       channelsByName.set(name, result.channel);
 
@@ -484,8 +688,7 @@ async function setupServer(guild, requester) {
     }
   }
 
-  const ticketChannel =
-    channelsByName.get('open-a-ticket');
+  const ticketChannel = channelsByName.get('open-a-ticket');
 
   if (ticketChannel) {
     const recent = await ticketChannel.messages
@@ -550,23 +753,23 @@ async function handleTicketButton(interaction) {
     return false;
   }
 
-  if (!interaction.inGuild()) {
-    if (interaction.isRepliable()) {
+  if (!interaction.inGuild() || !interaction.guild) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: 'Tickets can only be opened inside a server.',
-        ephemeral: true
+        flags: 64
       });
     }
 
     return true;
   }
 
+  const guild = interaction.guild;
+
   if (id === 'nexus_ticket_close') {
     const channel = interaction.channel;
 
-    const openerId = channel?.topic?.startsWith(
-      'nexus-ticket:'
-    )
+    const openerId = channel?.topic?.startsWith('nexus-ticket:')
       ? channel.topic.slice('nexus-ticket:'.length)
       : null;
 
@@ -575,14 +778,11 @@ async function handleTicketButton(interaction) {
         PermissionFlagsBits.ManageChannels
       ) ?? false;
 
-    if (
-      interaction.user.id !== openerId &&
-      !isStaff
-    ) {
+    if (interaction.user.id !== openerId && !isStaff) {
       await interaction.reply({
         content:
           'Only the ticket opener or a member with Manage Channels can close this ticket.',
-        ephemeral: true
+        flags: 64
       });
 
       return true;
@@ -590,7 +790,7 @@ async function handleTicketButton(interaction) {
 
     await interaction.reply({
       content: 'Closing this ticket in a moment…',
-      ephemeral: true
+      flags: 64
     });
 
     await channel.send(
@@ -598,9 +798,9 @@ async function handleTicketButton(interaction) {
     ).catch(() => {});
 
     setTimeout(() => {
-      channel
-        .delete(`Ticket closed by ${interaction.user.tag}`)
-        .catch(() => {});
+      channel.delete(
+        `Ticket closed by ${interaction.user.tag}`
+      ).catch(() => {});
     }, 5000);
 
     return true;
@@ -616,25 +816,24 @@ async function handleTicketButton(interaction) {
 
   if (!kind) return false;
 
-  const guild = interaction.guild;
-
   const existing = guild.channels.cache.find(
     channel =>
       channel.type === ChannelType.GuildText &&
-      channel.topic ===
-        `nexus-ticket:${interaction.user.id}`
+      channel.topic === `nexus-ticket:${interaction.user.id}`
   );
 
   if (existing) {
     await interaction.reply({
       content: `You already have an open ticket: ${existing}`,
-      ephemeral: true
+      flags: 64
     });
 
     return true;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({
+    flags: 64
+  });
 
   try {
     const safeName = interaction.user.username
@@ -645,14 +844,16 @@ async function handleTicketButton(interaction) {
       .slice(0, 35) || 'member';
 
     const staffRoles = [
-      'Founder',
+      'Owner',
       'Administrator',
-      'Moderator'
+      'Head Administrator',
+      'Senior Moderator',
+      'Moderator',
+      'Trial Moderator',
+      'Support Team'
     ]
       .map(name =>
-        guild.roles.cache.find(
-          role => role.name === name
-        )
+        guild.roles.cache.find(role => role.name === name)
       )
       .filter(Boolean);
 
@@ -672,7 +873,7 @@ async function handleTicketButton(interaction) {
         ]
       },
       {
-        id: guild.client.user.id,
+        id: guild.members.me?.id || guild.client.user.id,
         allow: [
           PermissionFlagsBits.ViewChannel,
           PermissionFlagsBits.SendMessages,
@@ -698,18 +899,15 @@ async function handleTicketButton(interaction) {
       reason: `Ticket opened by ${interaction.user.tag}`
     });
 
-    const closeRow = new ActionRowBuilder()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId('nexus_ticket_close')
-          .setLabel('Close Ticket')
-          .setStyle(ButtonStyle.Danger)
-      );
+    const closeRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('nexus_ticket_close')
+        .setLabel('Close Ticket')
+        .setStyle(ButtonStyle.Danger)
+    );
 
     const ticketEmbed = new EmbedBuilder()
-      .setColor(
-        kind === 'commission' ? CYAN : ACCENT
-      )
+      .setColor(kind === 'commission' ? CYAN : ACCENT)
       .setTitle(
         `✦ ${kind.charAt(0).toUpperCase() + kind.slice(1)} Ticket`
       )
@@ -762,38 +960,35 @@ function registerSetupCommand(client) {
       PermissionFlagsBits.Administrator
     );
 
+  /*
+   * Register the command globally.
+   *
+   * This replaces the existing global command definition with
+   * the current version. Global command updates can take a little
+   * time to become visible in Discord.
+   */
   client.once('ready', async () => {
     try {
-      const commands = client.application?.commands;
-
-      if (!commands) {
+      if (!client.application) {
         throw new Error(
-          'Discord application is not available yet.'
+          'Discord application is not ready.'
         );
       }
 
-      const existing = await commands.fetch();
+      const existing = await client.application.commands.fetch();
 
-      const found = existing.find(
-        item => item.name === 'setupserver'
+      const otherCommands = existing
+        .filter(item => item.name !== 'setupserver')
+        .map(item => item.toJSON());
+
+      await client.application.commands.set([
+        ...otherCommands,
+        command.toJSON()
+      ]);
+
+      console.log(
+        '[NexusGuard] Registered /setupserver globally.'
       );
-
-      if (found) {
-        await commands.edit(
-          found.id,
-          command.toJSON()
-        );
-
-        console.log(
-          '[NexusGuard] Updated /setupserver'
-        );
-      } else {
-        await commands.create(command.toJSON());
-
-        console.log(
-          '[NexusGuard] Registered /setupserver'
-        );
-      }
     } catch (error) {
       console.error(
         '[NexusGuard] Could not register /setupserver:',
@@ -802,43 +997,75 @@ function registerSetupCommand(client) {
     }
   });
 
-  
   client.on('interactionCreate', async interaction => {
-    // Handle /setupserver separately from ticket buttons.
+    /*
+     * Setup command handler.
+     */
     if (
       interaction.isChatInputCommand() &&
       interaction.commandName === 'setupserver'
     ) {
+      /*
+       * Log the actual interaction context so Render logs can
+       * reveal why Discord might report the wrong context.
+       */
+      console.log('[NexusGuard Setup] Command received:', {
+        inGuild: interaction.inGuild(),
+        guildId: interaction.guildId,
+        guildName: interaction.guild?.name ?? null,
+        userId: interaction.user.id
+      });
+
+      if (!interaction.inGuild() || !interaction.guild) {
+        try {
+          await interaction.reply({
+            content:
+              'Please run /setupserver inside the Discord server you want to set up.',
+            flags: 64
+          });
+        } catch (error) {
+          console.error(
+            '[NexusGuard Setup] Could not reply to non-guild interaction:',
+            error
+          );
+        }
+
+        return;
+      }
+
+      if (
+        !interaction.memberPermissions?.has(
+          PermissionFlagsBits.Administrator
+        )
+      ) {
+        await interaction.reply({
+          content:
+            'Only server administrators can run this setup.',
+          flags: 64
+        }).catch(error => {
+          console.error(
+            '[NexusGuard Setup] Permission response failed:',
+            error
+          );
+        });
+
+        return;
+      }
+
       try {
-        // Acknowledge immediately, and only once.
-        await interaction.deferReply({ flags: 64 });
+        await interaction.deferReply({
+          flags: 64
+        });
       } catch (error) {
         console.error(
           '[NexusGuard Setup] Could not acknowledge interaction:',
           error
         );
+
         return;
       }
 
       try {
-        if (!interaction.inGuild() || !interaction.guild) {
-          await interaction.editReply({
-            content: 'Please run /setupserver inside your Discord server.'
-          });
-          return;
-        }
-
-        if (
-          !interaction.memberPermissions?.has(
-            PermissionFlagsBits.Administrator
-          )
-        ) {
-          await interaction.editReply({
-            content: 'Only server administrators can run this setup.'
-          });
-          return;
-        }
-
         const result = await setupServer(
           interaction.guild,
           interaction.user
@@ -857,7 +1084,7 @@ function registerSetupCommand(client) {
             '',
             'Existing matching roles and channels were reused.',
             'Review role positions and test channel permissions.'
-                    ].join('\n'))
+          ].join('\n'))
           .setFooter({
             text: 'NexusGuard • Purple × Cyan'
           });
@@ -869,18 +1096,24 @@ function registerSetupCommand(client) {
         console.error('[NexusGuard Setup]', error);
 
         await interaction.editReply({
-          content: `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
+          content:
+            `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
         }).catch(() => {});
       }
 
       return;
     }
 
-    // Preserve ticket-button functionality.
+    /*
+     * Ticket button handler.
+     */
     try {
       await handleTicketButton(interaction);
     } catch (error) {
-      console.error('[NexusGuard Ticket Interaction]', error);
+      console.error(
+        '[NexusGuard Ticket Interaction]',
+        error
+      );
 
       if (
         interaction.isRepliable() &&
@@ -888,7 +1121,8 @@ function registerSetupCommand(client) {
         !interaction.deferred
       ) {
         await interaction.reply({
-          content: 'Something went wrong while processing that action.',
+          content:
+            'Something went wrong while processing that action.',
           flags: 64
         }).catch(() => {});
       }
