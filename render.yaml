@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: nexusguard
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_REDIRECT_URI
+        sync: false
+      - key: DASHBOARD_URL
+        sync: false
+      - key: OWNER_DISCORD_ID
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: ./data/nexusguard.sqlite
+      - key: HOURLY_OWNER_REPORTS
+        value: "true"
