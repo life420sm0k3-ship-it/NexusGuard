@@ -239,10 +239,44 @@ const commands = [
   new SlashCommandBuilder().setName("serverstats").setDescription("View server stats")
 ].map(c => c.toJSON());
 
+// Convert the old visual divider commands into real Discord command groups.
+// Commands with Discord-side default permissions stay top-level so their
+// existing permission restrictions are preserved exactly.
+const COMMAND_GROUPS = {
+  general: new Set(["website", "help", "commands", "invite", "ping", "botinfo", "uptime"]),
+  "server-tools": new Set(["serverinfo", "membercount", "servericon", "userinfo", "avatar", "roleinfo", "channelinfo", "rolelist", "channellist", "memberstats", "serverstats"]),
+  moderation: new Set(["warnings", "untimeout", "clearwarnings"]),
+  roles: new Set(["nickname", "roleadd", "roleremove"]),
+  community: new Set(["poll", "announce", "say", "remind"]),
+  fun: new Set(["coinflip", "dice", "eightball", "choose", "rate", "rps"]),
+  configuration: new Set(["settings"])
+};
+const DIVIDER_NAMES = new Set(["general", "server-tools", "moderation-tools", "roles", "tickets", "community", "automod", "levels", "economy", "fun", "configuration", "owner"]);
+function buildGroupedCommands() {
+  const flat = commands.filter(c => !DIVIDER_NAMES.has(c.name));
+  const groups = new Map();
+  const output = [];
+  for (const cmd of flat) {
+    const groupName = Object.keys(COMMAND_GROUPS).find(name => COMMAND_GROUPS[name].has(cmd.name));
+    // Preserve Discord-enforced permission defaults on their existing commands.
+    if (!groupName || cmd.default_member_permissions != null || cmd.dm_permission === false && !groupName) {
+      output.push(cmd);
+      continue;
+    }
+    if (!groups.has(groupName)) groups.set(groupName, []);
+    groups.get(groupName).push({ type: 1, name: cmd.name, description: cmd.description.slice(0, 100), options: cmd.options || [] });
+  }
+  for (const [name, options] of groups) {
+    output.push({ type: 1, name, description: `${name.replace(/-/g, " ")} commands`, options });
+  }
+  return output;
+}
+
 async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(TOKEN);
-  const result = await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-  console.log(`Registered ${result.length} global slash commands.`);
+  const body = buildGroupedCommands();
+  const result = await rest.put(Routes.applicationCommands(CLIENT_ID), { body });
+  console.log(`Registered ${result.length} global slash commands (${body.filter(c => c.options?.some(o => o.type === 1)).length} command groups).`);
 }
 
 client.once("ready", () => {
@@ -294,7 +328,9 @@ client.on("messageCreate", async message => {
 
 client.on("interactionCreate", async i => {
   if (!i.isChatInputCommand()) return;
-  const n = i.commandName;
+  // For grouped commands, dispatch using the selected subcommand's original
+  // name so the existing handlers and option reads continue to work unchanged.
+  const n = i.options.getSubcommand(false) || i.commandName;
   const replyError = async e => {
     if (e?.code === 10062 || e?.rawError?.code === 10062) {
       console.warn(`/${n}: Discord interaction expired before a response could be sent (10062).`);
@@ -325,20 +361,17 @@ client.on("interactionCreate", async i => {
       return i.reply({ content: `Invite NexusGuard: ${u}`, ephemeral: true });
     }
 
-    const dividerNames = new Set(["general","server-tools","moderation-tools","roles","tickets","community","automod","levels","economy","fun","configuration","owner"]);
-    if (dividerNames.has(n)) {
-      // A separator is intentionally non-functional; acknowledge it so Discord does not show "interaction failed".
-      return i.reply({ content: `━━━━━━━━━━ ${n.replace(/-/g, " ").toUpperCase()} COMMANDS ━━━━━━━━━━`, ephemeral: true });
-    }
-
     if (n === "commands" || n === "help") {
       const e = new EmbedBuilder().setColor(0x8b5cf6).setTitle("🛡️ NexusGuard Commands")
         .setDescription(
-          "**GENERAL:** /website /help /commands /invite /ping /botinfo /uptime\n`/general` is a category divider only.\n\n" +
-          "**SERVER TOOLS:** /serverinfo /serverstats /membercount /servericon /userinfo /memberstats /avatar /roleinfo /channelinfo /rolelist /channellist /topic\n`/server-tools` is a category divider only.\n\n" +
-          "**MODERATION:** /warn /warnings /clearwarnings /timeout /untimeout /kick /ban /unban /purge /lock /unlock /slowmode\n`/moderation-tools` is a category divider only.\n\n" +
-          "**ROLES & MEMBERS:** /nickname /roleadd /roleremove /userinfo /memberstats\n**COMMUNITY:** /poll /announce /say /embed /remind /settings\n**DIVIDERS:** /general /server-tools /moderation-tools /roles /tickets /community /automod /levels /economy /fun /configuration /owner (labels only; no actions)\n\n" +
-          "**Fun:** /coinflip /dice /eightball /choose /rate /rps"
+          "**GENERAL GROUP:** /general website, /general help, /general commands, /general invite, /general ping, /general botinfo, /general uptime\n\n" +
+          "**SERVER TOOLS GROUP:** /server-tools serverinfo, membercount, servericon, userinfo, avatar, roleinfo, channelinfo, rolelist, channellist, memberstats, serverstats\n\n" +
+          "**MODERATION:** /warn, /timeout, /kick, /ban, /purge, /lock, /unlock, /slowmode and related tools\n\n" +
+          "**ROLES GROUP:** /roles nickname, /roles roleadd, /roles roleremove\n" +
+          "**COMMUNITY GROUP:** /community poll, /community announce, /community say, /community remind\n" +
+          "**FUN GROUP:** /fun coinflip, /fun dice, /fun eightball, /fun choose, /fun rate, /fun rps\n" +
+          "**CONFIGURATION GROUP:** /configuration settings\n\n" +
+          "Commands with specific Discord permission requirements remain separate top-level commands."
         );
       return i.reply({ embeds: [e], ephemeral: true });
     }
@@ -745,6 +778,33 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}s
 @media(max-width:1050px){.layout{grid-template-columns:205px minmax(0,1fr);gap:15px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.server-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.topbar{height:62px;padding:0 13px}.brand{font-size:12px;letter-spacing:1px;gap:8px}.logo{width:34px;height:34px;border-radius:11px}.live-pill{display:none}.top-right .btn{padding:9px 11px;font-size:12px}.layout{display:block;padding:18px 12px 90px}.sidebar{display:none}.welcome{margin-bottom:17px}.welcome h1{font-size:30px;letter-spacing:-1px}.owner-label{font-size:9px;padding:7px 9px}.hero{border-radius:18px;padding:22px 18px}.hero h2{font-size:26px}.metrics{gap:9px;margin:12px 0 18px}.metric{padding:13px;border-radius:14px}.metric-head{font-size:10px}.metric-icon{width:28px;height:28px}.metric-value{font-size:25px}.metric-foot{font-size:10px}.panel{padding:16px;border-radius:15px}.section-head{margin-top:23px}.field-grid{grid-template-columns:1fr}.mobile-nav{display:flex;position:fixed;z-index:20;bottom:0;left:0;right:0;padding:8px 7px calc(8px + env(safe-area-inset-bottom));background:#0b101ceF;backdrop-filter:blur(20px);border-top:1px solid #303b52;justify-content:space-around;gap:4px}.mobile-nav button{flex:1;display:flex;flex-direction:column;gap:3px;padding:7px 3px;background:transparent;border:0;box-shadow:none;color:#8f9db5;font-size:9px}.mobile-nav button.active{color:#c4b5fd;background:#8b5cf61c}.mobile-nav .nav-ico{font-size:17px}.section-head .btn{padding:9px 10px;font-size:11px}.server-card{padding:13px}.server-icon{width:40px;height:40px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+/* NexusGuard visual refresh — premium, crisp, and mobile-first */
+:root{--bg:#070a12;--panel:#0e1422;--panel2:#131d30;--line:#26344b;--purple:#9b8cff;--cyan:#62e7f5;--text:#f5f7ff;--muted:#9ba9c2;--green:#70efc0;--shadow:0 24px 80px #0007}
+body{background:radial-gradient(ellipse at 12% -12%,#5842a533,transparent 38%),radial-gradient(ellipse at 95% 5%,#087f8e20,transparent 31%),#070a12;letter-spacing:.005em}
+body:before{opacity:.09;background-size:42px 42px;mask-image:linear-gradient(#000,transparent 65%)}
+.topbar{height:78px;padding-inline:clamp(16px,4vw,54px);background:#080c16d9;border-bottom-color:#253148;box-shadow:0 8px 36px #0002}
+.brand{font-size:13px;letter-spacing:2.2px}.logo{width:43px;height:43px;border-radius:15px;background:linear-gradient(145deg,#a99bff,#6d5df6 52%,#43d8e8);box-shadow:0 0 0 5px #9385ff12,0 8px 28px #7665ff3b;font-size:23px}
+.top-right .btn{border-radius:13px;padding:11px 16px;box-shadow:0 8px 24px #7764ff22}
+.layout{max-width:1580px;padding-top:34px;grid-template-columns:255px minmax(0,1fr);gap:28px}
+.sidebar{top:98px;border-color:#28334a;background:linear-gradient(165deg,#101727f5,#0b101bf5);border-radius:23px;padding:17px;box-shadow:0 18px 60px #0003}
+.side-brand{color:#7686a4;font-size:10px;letter-spacing:2px;padding:9px 11px 13px}
+.nav{gap:7px}.nav button{border-radius:13px;padding:12px 13px;color:#aebbd1;font-size:13px}.nav button.active{background:linear-gradient(100deg,#8b7cff25,#59d9e512);border-color:#897aff40;color:#fff;box-shadow:inset 3px 0 #9d8cff}.nav button.active .ico{color:#b7aaff}.nav .ico{width:26px;color:#8493af}
+.profile{padding:3px}.avatar{border-radius:13px;box-shadow:0 0 0 3px #9d8cff1b}
+.welcome{align-items:center;margin:0 0 25px}.welcome h1{font-size:clamp(31px,4vw,46px);letter-spacing:-2px;margin:10px 0 11px}.welcome p{line-height:1.75;font-size:14px}.eyebrow{letter-spacing:2.5px;font-size:10px}
+.hero{border-radius:26px;border-color:#484b7b;background:radial-gradient(ellipse at 90% 15%,#5be2ed1b,transparent 35%),linear-gradient(120deg,#211b3c 0%,#171d33 50%,#102a35 100%);padding:clamp(27px,4vw,43px);box-shadow:0 22px 75px #0003,inset 0 1px #ffffff0b}
+.hero:before{content:"";position:absolute;width:250px;height:250px;right:7%;top:5%;border:1px solid #9d8cff21;border-radius:50%;box-shadow:0 0 0 30px #9d8cff08,0 0 0 65px #9d8cff05;pointer-events:none}
+.hero:after{right:4%;top:-28px;color:#d8d1ff08;font-size:clamp(180px,23vw,300px)}.hero-inner{max-width:760px}.hero h2{font-size:clamp(28px,3.5vw,41px);letter-spacing:-1.5px;line-height:1.13;margin:14px 0}.hero p{line-height:1.8;font-size:14px;color:#c0cbe0;max-width:620px;margin-bottom:24px}
+button,a.btn{border-radius:13px;padding:12px 16px;font-weight:800;box-shadow:0 8px 24px #7764ff20}button:hover,a.btn:hover{transform:translateY(-2px);filter:brightness(1.08)}.btn-ghost{background:#151e30!important;border-color:#34415a!important;color:#e4eaff!important}.actions{gap:10px}
+.metrics{gap:14px;margin:20px 0 25px}.metric{position:relative;overflow:hidden;padding:19px;border-radius:19px;border-color:#28364e;background:linear-gradient(145deg,#121b2c,#0c121f);box-shadow:0 14px 35px #0002}.metric:after{content:"";position:absolute;width:80px;height:80px;right:-36px;bottom:-43px;border-radius:50%;background:#9485ff10}.metric-head{font-size:12px;font-weight:650}.metric-icon{width:37px;height:37px;border-radius:13px;background:linear-gradient(145deg,#8d7cff27,#51dce51a);border:1px solid #8f85ff1c;color:#c4baff}.metric-value{font-size:clamp(25px,3vw,35px);margin-top:15px;letter-spacing:-1.3px}.metric-foot{color:#8796b0;margin-top:5px}
+.section-head{margin:32px 0 15px}.section-head h2{font-size:20px;letter-spacing:-.4px}.section-head p{font-size:12px;line-height:1.6}.panel{border-radius:20px;padding:23px;margin-top:17px;background:linear-gradient(150deg,#111a2a,#0c121f);border-color:#28354c;box-shadow:0 15px 45px #0002}.panel-head{margin-bottom:18px}.panel h2,.panel h3{letter-spacing:-.3px}.server-grid{gap:13px}.server-card{border-radius:17px;border-color:#28364d;background:linear-gradient(140deg,#131d2e,#0d1421);padding:17px;box-shadow:0 8px 24px #0002}.server-card:hover{border-color:#9284ff;box-shadow:0 13px 35px #0003,0 0 0 1px #9284ff18}.server-card.selected{border-color:#9b8cff;background:linear-gradient(135deg,#292345,#10232f);box-shadow:0 0 0 2px #9b8cff19}.server-icon{border-radius:15px;background:linear-gradient(145deg,#29334d,#182337);border:1px solid #ffffff0a}.server-name{font-size:13px}.server-meta{line-height:1.5}
+.field-grid{gap:15px}label.field{font-size:12px;letter-spacing:.01em}input[type=text],input[type=number],select,textarea{background:#090f1b;border-color:#303d55;border-radius:13px;padding:13px 14px}input:focus,select:focus,textarea:focus{border-color:#9b8cff;box-shadow:0 0 0 4px #9b8cff18}
+.toggle-row{padding:16px 0;border-color:#253148}.toggle-title{font-size:13px}.toggle-desc{line-height:1.55}.switch{width:46px;height:27px}.switch:before{width:21px;height:21px}.switch:checked:before{transform:translateX(19px)}
+.table-wrap{border-radius:15px;border-color:#2a374e}th{background:#141d2d;color:#aab8d0}th,td{padding:14px 15px}td{color:#d6deee}.empty{border-color:#35435c;background:#0c1320;color:#9aa9c3;border-radius:16px;padding:31px 15px;line-height:1.7}.notice{border-radius:14px;padding:13px 15px}.owner-label{border-color:#7960b2;background:#251b3c;color:#dfd2ff}
+.footer{padding:28px 10px;color:#7785a0}
+@media(max-width:1050px){.layout{grid-template-columns:220px minmax(0,1fr);gap:18px}.metrics{gap:10px}.metric{padding:15px}}
+@media(max-width:700px){.topbar{height:66px;padding:0 14px}.brand{font-size:11px;letter-spacing:1.5px}.logo{width:36px;height:36px;border-radius:12px}.top-right .btn{padding:9px 11px;border-radius:11px}.layout{padding:19px 13px calc(105px + env(safe-area-inset-bottom));}.welcome{align-items:flex-start;gap:9px}.welcome h1{font-size:31px;line-height:1.13;letter-spacing:-1.2px}.welcome p{font-size:13px;line-height:1.7}.hero{padding:24px 19px;border-radius:21px}.hero:before{width:150px;height:150px;right:-25px;top:20px}.hero:after{font-size:170px;right:-3%;top:0}.hero h2{font-size:28px;letter-spacing:-1px}.hero p{font-size:13px;line-height:1.75}.hero .actions{display:grid;grid-template-columns:1fr}.hero .actions a,.hero .actions button{width:100%}.metrics{gap:9px;margin:14px 0 20px}.metric{padding:13px 12px;border-radius:15px}.metric-head{align-items:flex-start;font-size:10px;line-height:1.4}.metric-icon{width:29px;height:29px;border-radius:10px}.metric-value{font-size:25px;margin-top:11px}.metric-foot{font-size:9px}.panel{padding:16px;border-radius:17px}.section-head{margin-top:25px}.section-head h2{font-size:18px}.server-grid{grid-template-columns:1fr;gap:10px}.server-card{padding:14px;border-radius:15px}.server-icon{width:42px;height:42px}.toolbar{gap:8px}.toolbar select{min-width:100%}.mobile-nav{padding:8px 8px calc(9px + env(safe-area-inset-bottom));background:#080d18ed;border-top:1px solid #2b3750;box-shadow:0 -12px 35px #0004}.mobile-nav button{border-radius:12px;font-size:9px;min-height:48px}.mobile-nav button.active{color:#d1c9ff;background:linear-gradient(135deg,#8b7cff22,#55dce510)}.field-grid{grid-template-columns:1fr}.section-head .btn{padding:9px 10px}.owner-label{font-size:9px;padding:7px 9px}.table-wrap{max-width:100%}th,td{padding:12px;font-size:11px}}
+
 </style></head><body>
 <header class="topbar"><a class="brand" href="/"><span class="logo">N</span><span>NEXUS<span>GUARD</span></span></a><div class="top-right"><span class="live-pill"><i class="dot"></i><span id="topStatus">Connecting</span></span><a class="btn" href="${signedIn?"/auth/logout":"/auth/login"}">${signedIn?"Sign out":"Connect Discord ↗"}</a></div></header>
 <div class="layout">
