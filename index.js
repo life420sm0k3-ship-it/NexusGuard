@@ -1,5 +1,6 @@
 "use strict";
 
+const { registerSetupCommand } = require('./setupServer');
 const express = require("express");
 const session = require("express-session");
 const PgSession = require("connect-pg-simple")(session);
