@@ -1164,17 +1164,21 @@ app.use("/api", rateLimit({
   legacyHeaders: false
 }));
 
+
+const sessionStore = new PgSession({
+  pool,
+  tableName: "session",
+  createTableIfMissing: false,
+  pruneSessionInterval: 60 * 15
+});
+
 app.use(session({
   name: "nexusguard.sid",
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   proxy: true,
-  store: new PgSession({
-    pool,
-    tableName: "session",
-    createTableIfMissing: true
-  }),
+  store: sessionStore,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -1182,6 +1186,7 @@ app.use(session({
     maxAge: 7 * 24 * 60 * 60 * 1000
   }
 }));
+
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, char => ({
