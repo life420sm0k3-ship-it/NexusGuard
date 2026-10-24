@@ -44,6 +44,18 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent
   ]
+  const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+registerSetupCommand(client);
+
+// Keep the existing code below this line.
 });
 // Prevent Discord.js client error events from terminating the whole Render process.
 // Interaction error 10062 means Discord has expired the interaction token; it is logged
