@@ -46,13 +46,7 @@ const client = new Client({
   ]
 });
 
-registerSetupCommand(client);
-
-// Keep the existing code below this line.
-});
 // Prevent Discord.js client error events from terminating the whole Render process.
-// Interaction error 10062 means Discord has expired the interaction token; it is logged
-// and ignored rather than being allowed to crash the bot.
 client.on("error", error => {
   if (error?.code === 10062 || error?.rawError?.code === 10062) {
     console.warn("Discord interaction expired (10062); the bot will keep running.");
