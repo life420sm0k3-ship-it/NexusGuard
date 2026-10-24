@@ -857,7 +857,7 @@ function registerSetupCommand(client) {
             '',
             'Existing matching roles and channels were reused.',
             'Review role positions and test channel permissions.'
-          ].join('\n'))
+                    ].join('\n'))
           .setFooter({
             text: 'NexusGuard • Purple × Cyan'
           });
@@ -869,15 +869,14 @@ function registerSetupCommand(client) {
         console.error('[NexusGuard Setup]', error);
 
         await interaction.editReply({
-          content:
-            `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
+          content: `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
         }).catch(() => {});
       }
 
       return;
     }
 
-    // Preserve the existing ticket-button functionality.
+    // Preserve ticket-button functionality.
     try {
       await handleTicketButton(interaction);
     } catch (error) {
@@ -891,93 +890,6 @@ function registerSetupCommand(client) {
         await interaction.reply({
           content: 'Something went wrong while processing that action.',
           flags: 64
-        }).catch(() => {});
-      }
-    }
-  });
-
-
-    if (!interaction.inGuild() || !interaction.guild) {
-      await interaction.editReply({
-        content: 'Use this command inside your Discord server.'
-      });
-      return;
-    }
-
-    if (
-      !interaction.memberPermissions?.has(
-        PermissionFlagsBits.Administrator
-      )
-    ) {
-      await interaction.editReply({
-        content: 'Only server administrators can run this setup.'
-      });
-      return;
-    }
-
-        try {
-          const guild = interaction.guild;
-
-if (!guild || !interaction.guildId) {
-  await interaction.editReply({
-    content: 'I could not identify the Discord server. Please run /setupserver again inside your server.'
-  });
-  return;
-}
-
-const result = await setupServer(guild, interaction.user);
-          const embed = new EmbedBuilder()
-            .setColor(ACCENT)
-            .setTitle('✦ NexusGuard Setup Complete')
-            .setDescription([
-              'The developer showcase structure has been checked and created.',
-              '',
-              `**New roles:** ${result.created.roles}`,
-              `**New categories:** ${result.created.categories}`,
-              `**New channels:** ${result.created.channels}`,
-              `**Starter posts:** ${result.created.posts}`,
-              '',
-              'Existing matching channels and roles were reused.',
-              'Review role positions and assign staff roles manually.'
-            ].join('\n'))
-            .setFooter({
-              text: 'NexusGuard • Purple × Cyan'
-            });
-
-          await interaction.editReply({
-            embeds: [embed]
-          });
-        } catch (error) {
-          console.error(
-            '[NexusGuard Setup]',
-            error
-          );
-
-          await interaction.editReply({
-            content:
-              `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
-          });
-        }
-
-        return;
-      }
-
-      await handleTicketButton(interaction);
-    } catch (error) {
-      console.error(
-        '[NexusGuard Interaction]',
-        error
-      );
-
-      if (
-        interaction.isRepliable() &&
-        !interaction.replied &&
-        !interaction.deferred
-      ) {
-        await interaction.reply({
-          content:
-            'Something went wrong while processing that action.',
-          ephemeral: true
         }).catch(() => {});
       }
     }
