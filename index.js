@@ -1165,10 +1165,11 @@ app.use("/api", rateLimit({
 }));
 
 
+
 const sessionStore = new PgSession({
   pool,
   tableName: "session",
-  createTableIfMissing: false,
+  createTableIfMissing: true,
   pruneSessionInterval: 60 * 15
 });
 
