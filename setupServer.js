@@ -802,17 +802,100 @@ function registerSetupCommand(client) {
     }
   });
 
+  
   client.on('interactionCreate', async interaction => {
-    
-try {
-  if (
-    interaction.isChatInputCommand() &&
-    interaction.commandName === 'setupserver'
-  ) {
-    // Acknowledge the command immediately.
-    await interaction.deferReply({
-  flags: 64
-});
+    // Handle /setupserver separately from ticket buttons.
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === 'setupserver'
+    ) {
+      try {
+        // Acknowledge immediately, and only once.
+        await interaction.deferReply({ flags: 64 });
+      } catch (error) {
+        console.error(
+          '[NexusGuard Setup] Could not acknowledge interaction:',
+          error
+        );
+        return;
+      }
+
+      try {
+        if (!interaction.inGuild() || !interaction.guild) {
+          await interaction.editReply({
+            content: 'Please run /setupserver inside your Discord server.'
+          });
+          return;
+        }
+
+        if (
+          !interaction.memberPermissions?.has(
+            PermissionFlagsBits.Administrator
+          )
+        ) {
+          await interaction.editReply({
+            content: 'Only server administrators can run this setup.'
+          });
+          return;
+        }
+
+        const result = await setupServer(
+          interaction.guild,
+          interaction.user
+        );
+
+        const embed = new EmbedBuilder()
+          .setColor(ACCENT)
+          .setTitle('✦ NexusGuard Setup Complete')
+          .setDescription([
+            'The server layout has been checked and created.',
+            '',
+            `**New roles:** ${result.created.roles}`,
+            `**New categories:** ${result.created.categories}`,
+            `**New channels:** ${result.created.channels}`,
+            `**Starter posts:** ${result.created.posts}`,
+            '',
+            'Existing matching roles and channels were reused.',
+            'Review role positions and test channel permissions.'
+          ].join('\n'))
+          .setFooter({
+            text: 'NexusGuard • Purple × Cyan'
+          });
+
+        await interaction.editReply({
+          embeds: [embed]
+        });
+      } catch (error) {
+        console.error('[NexusGuard Setup]', error);
+
+        await interaction.editReply({
+          content:
+            `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
+        }).catch(() => {});
+      }
+
+      return;
+    }
+
+    // Preserve the existing ticket-button functionality.
+    try {
+      await handleTicketButton(interaction);
+    } catch (error) {
+      console.error('[NexusGuard Ticket Interaction]', error);
+
+      if (
+        interaction.isRepliable() &&
+        !interaction.replied &&
+        !interaction.deferred
+      ) {
+        await interaction.reply({
+          content: 'Something went wrong while processing that action.',
+          flags: 64
+        }).catch(() => {});
+      }
+    }
+  });
+
 
     if (!interaction.inGuild() || !interaction.guild) {
       await interaction.editReply({
