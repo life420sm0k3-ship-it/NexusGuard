@@ -1,0 +1,24 @@
+
+{
+  "name": "nexusguard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NexusGuard multi-server Discord bot and web dashboard",
+  "main": "index.js",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "register": "node index.js --register"
+  },
+  "dependencies": {
+    "connect-pg-simple": "^10.0.0",
+    "discord.js": "^14.22.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "pg": "^8.16.3"
+  }
+}
