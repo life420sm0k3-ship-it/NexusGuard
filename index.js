@@ -46,6 +46,8 @@ const client = new Client({
   ]
 });
 
+registerSetupCommand(client);
+
 // Prevent Discord.js client error events from terminating the whole Render process.
 client.on("error", error => {
   if (error?.code === 10062 || error?.rawError?.code === 10062) {
