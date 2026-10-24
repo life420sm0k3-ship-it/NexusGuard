@@ -15,13 +15,31 @@ const CYAN = 0x22D3EE;
 const SETUP_REASON = 'NexusGuard developer showcase setup';
 
 const ROLE_DEFINITIONS = [
-  { name: 'Founder', color: 0xF59E0B },
-  { name: 'Administrator', color: 0xEF4444 },
-  { name: 'Moderator', color: 0xF97316 },
-  { name: 'Developer', color: 0x8B5CF6 },
-  { name: 'Client', color: 0x22D3EE },
-  { name: 'Beta Tester', color: 0x10B981 },
-  { name: 'Community', color: 0x94A3B8 }
+  // Decorative role dividers: no permissions and no members.
+  { name: '「━━━━ 👑 MANAGEMENT ━━━━」', color: 0xA78BFA, divider: true },
+  { name: 'Owner', color: 0xF59E0B, permissions: [PermissionFlagsBits.Administrator], hoist: true },
+  { name: 'Administrator', color: 0xEF4444, permissions: [PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.KickMembers, PermissionFlagsBits.BanMembers, PermissionFlagsBits.ModerateMembers], hoist: true },
+  { name: 'Head Administrator', color: 0xFB7185, permissions: [PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.KickMembers, PermissionFlagsBits.BanMembers, PermissionFlagsBits.ModerateMembers], hoist: true },
+
+  { name: '「━━━━ 🛡️ STAFF TEAM ━━━━」', color: 0xA78BFA, divider: true },
+  { name: 'Senior Moderator', color: 0xF97316, permissions: [PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.KickMembers, PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageMessages], hoist: true },
+  { name: 'Moderator', color: 0x22C55E, permissions: [PermissionFlagsBits.KickMembers, PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageMessages], hoist: true },
+  { name: 'Trial Moderator', color: 0x14B8A6, permissions: [PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageMessages] },
+  { name: 'Support Team', color: 0x38BDF8, permissions: [] },
+  { name: '「━━━━ 💻 CREATORS ━━━━」', color: 0xA78BFA, divider: true },
+  { name: 'Developer', color: 0x8B5CF6, permissions: [], hoist: true },
+  { name: 'Partner', color: 0xC084FC, permissions: [] },
+  { name: 'Client', color: 0x22D3EE, permissions: [] },
+  { name: 'Beta Tester', color: 0x10B981, permissions: [] },
+  { name: '「━━━━ 💜 COMMUNITY ━━━━」', color: 0xA78BFA, divider: true },
+  { name: 'VIP', color: 0xF472B6, permissions: [] },
+  { name: 'Verified Member', color: 0x60A5FA, permissions: [] },
+  { name: 'Community', color: 0x94A3B8, permissions: [] },
+  { name: 'New Member', color: 0x9CA3AF, permissions: [] },
+  { name: '「━━━━ ⚙️ SYSTEM ━━━━」', color: 0xA78BFA, divider: true },
+  { name: 'Bots', color: 0x64748B, permissions: [] },
+  { name: 'Muted', color: 0x6B7280, permissions: [] },
+  { name: 'Quarantined', color: 0x991B1B, permissions: [] }
 ];
 
 const CATEGORY_DEFINITIONS = [
@@ -165,20 +183,27 @@ async function getOrCreateRole(guild, definition) {
     r => r.name === definition.name
   );
 
+  const permissionBits = definition.divider
+    ? []
+    : (definition.permissions || []);
+
   if (role) {
-    return { role, created: false };
+    // Reconcile configured role settings without changing unrelated roles.
+    await role.edit({
+      color: definition.color,
+      permissions: permissionBits,
+      mentionable: false,
+      hoist: Boolean(definition.hoist)
+    }, SETUP_REASON);
+    return { role: await guild.roles.fetch(role.id), created: false };
   }
 
   role = await guild.roles.create({
     name: definition.name,
     color: definition.color,
+    permissions: permissionBits,
     mentionable: false,
-    hoist: [
-      'Founder',
-      'Administrator',
-      'Moderator',
-      'Developer'
-    ].includes(definition.name),
+    hoist: Boolean(definition.hoist),
     reason: SETUP_REASON
   });
 
@@ -303,10 +328,21 @@ async function setupServer(guild, requester) {
   }
 
   const staffRoles = [
-    roles.Founder,
+    roles.Owner,
     roles.Administrator,
-    roles.Moderator
-  ];
+    roles['Head Administrator'],
+    roles['Senior Moderator'],
+    roles.Moderator,
+    roles['Support Team']
+  ].filter(Boolean);
+
+  const announcementOnly = new Set([
+    'welcome', 'rules', 'announcements', 'server-guide',
+    'known-issues', 'services-and-prices', 'hire-me'
+  ]);
+
+  const memberRole = roles['Verified Member'] || roles.Community;
+  const staffCanPost = staffRoles.filter(Boolean);
 
   const staffOverwrites = [
     {
@@ -328,13 +364,38 @@ async function setupServer(guild, requester) {
   for (const definition of CATEGORY_DEFINITIONS) {
     const overwrites = definition.staffOnly
       ? staffOverwrites
-      : [];
+      : [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: me.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
+          },
+          ...(memberRole ? [{
+            id: memberRole.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AddReactions, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks]
+          }] : []),
+          {
+            id: me.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
+          },
+          ...staffCanPost.map(role => ({
+            id: role.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages]
+          }))
+        ];
 
     const categoryResult = await getOrCreateCategory(
       guild,
       definition.name,
       overwrites
     );
+
+    // Apply permission overwrites to existing categories too.
+    await categoryResult.channel.permissionOverwrites.set(overwrites, SETUP_REASON);
 
     const category = categoryResult.channel;
 
@@ -343,14 +404,32 @@ async function setupServer(guild, requester) {
     }
 
     for (const [name] of definition.channels) {
+      let channelOverwrites = definition.staffOnly ? staffOverwrites : overwrites;
+      if (!definition.staffOnly && announcementOnly.has(name)) {
+        channelOverwrites = [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: me.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
+          },
+          ...staffCanPost.map(role => ({
+            id: role.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages]
+          }))
+        ];
+      }
+
       const result = await getOrCreateTextChannel(
         guild,
         name,
         category,
-        definition.staffOnly
-          ? staffOverwrites
-          : []
+        channelOverwrites
       );
+      await result.channel.permissionOverwrites.set(channelOverwrites, SETUP_REASON);
 
       channelsByName.set(name, result.channel);
 
