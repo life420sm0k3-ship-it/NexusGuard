@@ -329,16 +329,17 @@ client.on("interactionCreate", async i => {
     }
 
     if (n === "commands" || n === "help") {
+      // Keep help aligned with the real registered slash commands. Do not advertise
+      // the removed fake separator/group commands (for example /general or /roles).
       const e = new EmbedBuilder().setColor(0x8b5cf6).setTitle("🛡️ NexusGuard Commands")
         .setDescription(
-          "**GENERAL GROUP:** /general website, /general help, /general commands, /general invite, /general ping, /general botinfo, /general uptime\n\n" +
-          "**SERVER TOOLS GROUP:** /server-tools serverinfo, membercount, servericon, userinfo, avatar, roleinfo, channelinfo, rolelist, channellist, memberstats, serverstats\n\n" +
-          "**MODERATION:** /warn, /timeout, /kick, /ban, /purge, /lock, /unlock, /slowmode and related tools\n\n" +
-          "**ROLES GROUP:** /roles nickname, /roles roleadd, /roles roleremove\n" +
-          "**COMMUNITY GROUP:** /community poll, /community announce, /community say, /community remind\n" +
-          "**FUN GROUP:** /fun coinflip, /fun dice, /fun eightball, /fun choose, /fun rate, /fun rps\n" +
-          "**CONFIGURATION GROUP:** /configuration settings\n\n" +
-          "Commands with specific Discord permission requirements remain separate top-level commands."
+          "**GENERAL**\n/website · /help · /commands · /invite · /ping · /botinfo · /uptime\n\n" +
+          "**SERVER INFORMATION**\n/serverinfo · /membercount · /servericon · /userinfo · /avatar · /roleinfo · /channelinfo · /rolelist · /channellist · /memberstats · /serverstats\n\n" +
+          "**MODERATION**\n/warn · /warnings · /clearwarnings · /timeout · /untimeout · /kick · /ban · /unban · /purge\n\n" +
+          "**CHANNEL & MESSAGES**\n/lock · /unlock · /slowmode · /topic · /purge · /poll · /announce · /say · /embed · /remind\n\n" +
+          "**ROLES & SETTINGS**\n/nickname · /roleadd · /roleremove · /settings\n\n" +
+          "**FUN**\n/coinflip · /dice · /eightball · /choose · /rate · /rps\n\n" +
+          "Use the Discord slash-command picker to see each command's required options and permissions."
         );
       return i.reply({ embeds: [e], ephemeral: true });
     }
@@ -563,6 +564,9 @@ client.on("interactionCreate", async i => {
         .addFields({name:"Members",value:String(g.memberCount),inline:true},{name:"Cached bots",value:String(bots),inline:true},{name:"Roles",value:String(roles.size),inline:true},{name:"Channels",value:String(channels.size),inline:true},{name:"Boosts",value:String(g.premiumSubscriptionCount||0),inline:true},{name:"Verification",value:String(g.verificationLevel),inline:true});
       return i.reply({embeds:[e],ephemeral:true});
     }
+    // Never leave an advertised/registered command silently unhandled.
+    console.warn(`No handler is implemented for registered command /${n}.`);
+    return i.reply({ content: `The /${n} command is registered, but its handler is unavailable. Please contact the bot owner.`, ephemeral: true });
   } catch (error) {
     await replyError(error);
   }
