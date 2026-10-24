@@ -1,4 +1,3 @@
-
 'use strict';
 
 const {
@@ -8,12 +7,12 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle,
-  OverwriteType
+  ButtonStyle
 } = require('discord.js');
 
 const ACCENT = 0x8B5CF6;
 const CYAN = 0x22D3EE;
+const SETUP_REASON = 'NexusGuard developer showcase setup';
 
 const ROLE_DEFINITIONS = [
   { name: 'Founder', color: 0xF59E0B },
@@ -90,153 +89,181 @@ const CATEGORY_DEFINITIONS = [
   }
 ];
 
-const welcomeEmbed = () => new EmbedBuilder()
-  .setColor(ACCENT)
-  .setTitle('✦ Welcome to Nexus Development')
-  .setDescription([
-    'A home for Discord bots, websites, Minecraft projects, and creative developers.',
-    '',
-    '✧ Explore the project showcases.',
-    '✧ Join beta tests and help improve projects.',
-    '✧ Share your own work with the community.',
-    '✧ Ask about commissions or open a private ticket.',
-    '',
-    'Start by reading **#rules** and checking out **#project-showcase**.'
-  ].join('\n'))
-  .setFooter({ text: 'Nexus Development • Build something remarkable' });
+const welcomeEmbed = () =>
+  new EmbedBuilder()
+    .setColor(ACCENT)
+    .setTitle('✦ Welcome to Nexus Development')
+    .setDescription([
+      'A home for Discord bots, websites, Minecraft projects, and creative developers.',
+      '',
+      '✧ Explore the project showcases.',
+      '✧ Join beta tests and help improve projects.',
+      '✧ Share your own work with the community.',
+      '✧ Ask about commissions or open a private ticket.',
+      '',
+      'Start by reading **#rules** and checking out **#bot-showcase**.'
+    ].join('\n'))
+    .setFooter({
+      text: 'Nexus Development • Build something remarkable'
+    });
 
-const rulesEmbed = () => new EmbedBuilder()
-  .setColor(CYAN)
-  .setTitle('✦ Community Rules')
-  .setDescription([
-    '**01 — Respect everyone.** No harassment, hate, threats, or targeted abuse.',
-    '**02 — No spam.** Avoid message flooding, unsolicited advertising, and excessive pings.',
-    '**03 — Keep content in the right channels.** Use the appropriate project and support areas.',
-    '**04 — Protect privacy.** Never post passwords, tokens, private keys, or personal information.',
-    '**05 — No malicious projects.** Do not share malware, token stealers, or tools intended to harm others.',
-    '**06 — Be honest.** Do not claim someone else’s work as your own.',
-    '**07 — Use tickets for private requests.** Keep client details and sensitive support issues private.',
-    '**08 — Follow Discord’s Terms and Community Guidelines.**',
-    '',
-    'Staff may remove content or take action when necessary to protect the community.'
-  ].join('\n'))
-  .setFooter({ text: 'Nexus Development • Rules apply to all members' });
+const rulesEmbed = () =>
+  new EmbedBuilder()
+    .setColor(CYAN)
+    .setTitle('✦ Community Rules')
+    .setDescription([
+      '**01 — Respect everyone.** No harassment, hate, threats, or targeted abuse.',
+      '**02 — No spam.** Avoid message flooding, unsolicited advertising, and excessive pings.',
+      '**03 — Keep content in the right channels.** Use the appropriate project and support areas.',
+      '**04 — Protect privacy.** Never post passwords, tokens, private keys, or personal information.',
+      '**05 — No malicious projects.** Do not share malware, token stealers, or tools intended to harm others.',
+      '**06 — Be honest.** Do not claim someone else’s work as your own.',
+      '**07 — Use tickets for private requests.** Keep client details and sensitive support issues private.',
+      '**08 — Follow Discord’s Terms and Community Guidelines.**',
+      '',
+      'Staff may remove content or take action when necessary to protect the community.'
+    ].join('\n'))
+    .setFooter({
+      text: 'Nexus Development • Rules apply to all members'
+    });
 
-const hireEmbed = () => new EmbedBuilder()
-  .setColor(ACCENT)
-  .setTitle('✦ Hire / Commission a Project')
-  .setDescription([
-    'Looking for a Discord bot, website, dashboard, or Minecraft project?',
-    '',
-    '**How it works**',
-    '1. Open a private ticket in #open-a-ticket.',
-    '2. Describe what you want built.',
-    '3. Discuss the scope, estimated cost, and timeframe.',
-    '4. Approve the details before work begins.',
-    '',
-    '**Important:** Prices and delivery dates are confirmed individually. Do not send passwords or bot tokens. Never assume a project is accepted until the details are agreed upon.'
-  ].join('\n'));
+const hireEmbed = () =>
+  new EmbedBuilder()
+    .setColor(ACCENT)
+    .setTitle('✦ Hire / Commission a Project')
+    .setDescription([
+      'Looking for a Discord bot, website, dashboard, or Minecraft project?',
+      '',
+      '**How it works**',
+      '1. Open a private ticket in #open-a-ticket.',
+      '2. Describe what you want built.',
+      '3. Discuss the scope, estimated cost, and timeframe.',
+      '4. Approve the details before work begins.',
+      '',
+      '**Important:** Prices and delivery dates are confirmed individually. Do not send passwords or bot tokens. A project is not accepted until the details are agreed upon.'
+    ].join('\n'));
 
-const projectTemplate = (kind) => new EmbedBuilder()
-  .setColor(CYAN)
-  .setTitle(`✦ ${kind} Showcase Template`)
-  .setDescription([
-    '**Project name:**',
-    '**What it does:**',
-    '**Main features:**',
-    '**Technology / platform:**',
-    '**Demo or website link:**',
-    '**Screenshots / video:**',
-    '**Current status:** In development / Beta / Released',
-    '**Feedback wanted:**',
-    '',
-    'Do not publish API keys, passwords, private links, or other secrets.'
-  ].join('\n'));
-
-const slug = (value) => value
-  .toLowerCase()
-  .replace(/[✦]/g, '')
-  .replace(/[^a-z0-9-]/g, '-')
-  .replace(/-+/g, '-')
-  .replace(/^-|-$/g, '')
-  .slice(0, 90);
+const projectTemplate = kind =>
+  new EmbedBuilder()
+    .setColor(CYAN)
+    .setTitle(`✦ ${kind} Showcase Template`)
+    .setDescription([
+      '**Project name:**',
+      '**What it does:**',
+      '**Main features:**',
+      '**Technology / platform:**',
+      '**Demo or website link:**',
+      '**Screenshots / video:**',
+      '**Current status:** In development / Beta / Released',
+      '**Feedback wanted:**',
+      '',
+      'Do not publish API keys, passwords, private links, or other secrets.'
+    ].join('\n'));
 
 async function getOrCreateRole(guild, definition) {
-  let role = guild.roles.cache.find(r => r.name === definition.name);
-  if (role) return role;
+  let role = guild.roles.cache.find(
+    r => r.name === definition.name
+  );
+
+  if (role) {
+    return { role, created: false };
+  }
 
   role = await guild.roles.create({
     name: definition.name,
     color: definition.color,
     mentionable: false,
-    hoist: ['Founder', 'Administrator', 'Moderator', 'Developer'].includes(
-      definition.name
-    ),
-    reason: 'NexusGuard developer showcase setup'
+    hoist: [
+      'Founder',
+      'Administrator',
+      'Moderator',
+      'Developer'
+    ].includes(definition.name),
+    reason: SETUP_REASON
   });
 
-  return role;
+  return { role, created: true };
 }
 
-async function getOrCreateCategory(guild, name, overwrites = []) {
+async function getOrCreateCategory(guild, name, overwrites) {
   let category = guild.channels.cache.find(
-    c => c.type === ChannelType.GuildCategory && c.name === name
+    c =>
+      c.type === ChannelType.GuildCategory &&
+      c.name === name
   );
 
-  if (!category) {
-    category = await guild.channels.create({
-      name,
-      type: ChannelType.GuildCategory,
-      permissionOverwrites: overwrites,
-      reason: 'NexusGuard developer showcase setup'
-    });
+  if (category) {
+    return { channel: category, created: false };
   }
 
-  return category;
+  category = await guild.channels.create({
+    name,
+    type: ChannelType.GuildCategory,
+    permissionOverwrites: overwrites,
+    reason: SETUP_REASON
+  });
+
+  return { channel: category, created: true };
 }
 
-async function getOrCreateTextChannel(guild, name, parent, overwrites = []) {
+async function getOrCreateTextChannel(
+  guild,
+  name,
+  parent,
+  overwrites
+) {
   let channel = guild.channels.cache.find(
-    c => c.type === ChannelType.GuildText &&
-         c.name === name &&
-         c.parentId === parent.id
+    c =>
+      c.type === ChannelType.GuildText &&
+      c.name === name &&
+      c.parentId === parent.id
   );
 
-  if (!channel) {
-    channel = await guild.channels.create({
-      name,
-      type: ChannelType.GuildText,
-      parent,
-      permissionOverwrites: overwrites,
-      reason: 'NexusGuard developer showcase setup'
-    });
+  if (channel) {
+    return { channel, created: false };
   }
 
-  return channel;
+  channel = await guild.channels.create({
+    name,
+    type: ChannelType.GuildText,
+    parent: parent.id,
+    permissionOverwrites: overwrites,
+    reason: SETUP_REASON
+  });
+
+  return { channel, created: true };
 }
 
 async function sendStarterPost(channel, embed, marker) {
-  // Avoid posting the same starter message every time setup is rerun.
-  const recent = await channel.messages.fetch({ limit: 25 }).catch(() => null);
+  if (!channel) return false;
 
-  if (recent?.some(message =>
+  const recent = await channel.messages
+    .fetch({ limit: 50 })
+    .catch(() => null);
+
+  const exists = recent?.some(message =>
     message.author.id === channel.client.user.id &&
-    message.embeds.some(e => e.footer?.text === marker)
-  )) {
-    return false;
-  }
+    message.embeds.some(
+      item => item.footer?.text === marker
+    )
+  );
+
+  if (exists) return false;
 
   const copy = EmbedBuilder.from(embed)
     .setFooter({ text: marker });
 
   await channel.send({ embeds: [copy] });
+
   return true;
 }
 
 async function setupServer(guild, requester) {
-  const me = guild.members.me || await guild.members.fetchMe();
+  const me =
+    guild.members.me ||
+    await guild.members.fetchMe();
 
-  const needed = [
+  const required = [
     PermissionFlagsBits.ManageChannels,
     PermissionFlagsBits.ManageRoles,
     PermissionFlagsBits.ViewChannel,
@@ -245,19 +272,14 @@ async function setupServer(guild, requester) {
     PermissionFlagsBits.ReadMessageHistory
   ];
 
-  const missing = needed.filter(permission =>
-    !me.permissions.has(permission)
-  );
-
-  if (missing.length) {
+  if (!me.permissions.has(required)) {
     throw new Error(
-      'NexusGuard is missing required server permissions. ' +
-      'Grant Manage Channels, Manage Roles, View Channels, Send Messages, ' +
-      'Embed Links, and Read Message History, then try again.'
+      'NexusGuard needs Manage Channels, Manage Roles, ' +
+      'View Channel, Send Messages, Embed Links, and ' +
+      'Read Message History permissions.'
     );
   }
 
-  const everyone = guild.roles.everyone;
   const created = {
     roles: 0,
     categories: 0,
@@ -268,13 +290,18 @@ async function setupServer(guild, requester) {
   const roles = {};
 
   for (const definition of ROLE_DEFINITIONS) {
-    const existed = guild.roles.cache.some(r => r.name === definition.name);
-    roles[definition.name] = await getOrCreateRole(guild, definition);
-    if (!existed) created.roles++;
+    const result = await getOrCreateRole(
+      guild,
+      definition
+    );
+
+    roles[definition.name] = result.role;
+
+    if (result.created) {
+      created.roles++;
+    }
   }
 
-  // Keep existing role permissions unchanged. New roles receive no
-  // Administrator permission and must be assigned to people by staff.
   const staffRoles = [
     roles.Founder,
     roles.Administrator,
@@ -283,7 +310,7 @@ async function setupServer(guild, requester) {
 
   const staffOverwrites = [
     {
-      id: everyone.id,
+      id: guild.roles.everyone.id,
       deny: [PermissionFlagsBits.ViewChannel]
     },
     ...staffRoles.map(role => ({
@@ -293,100 +320,146 @@ async function setupServer(guild, requester) {
         PermissionFlagsBits.SendMessages,
         PermissionFlagsBits.ReadMessageHistory
       ]
-    })
+    }))
   ];
 
-  for (const definition of CATEGORY_DEFINITIONS) {
-    const overwrites = definition.staffOnly ? staffOverwrites : [];
-    const oldCategory = guild.channels.cache.find(
-      c => c.type === ChannelType.GuildCategory && c.name === definition.name
-    );
+  const channelsByName = new Map();
 
-    const category = await getOrCreateCategory(
+  for (const definition of CATEGORY_DEFINITIONS) {
+    const overwrites = definition.staffOnly
+      ? staffOverwrites
+      : [];
+
+    const categoryResult = await getOrCreateCategory(
       guild,
       definition.name,
       overwrites
     );
 
-    if (!oldCategory) created.categories++;
+    const category = categoryResult.channel;
+
+    if (categoryResult.created) {
+      created.categories++;
+    }
 
     for (const [name] of definition.channels) {
-      const oldChannel = guild.channels.cache.find(
-        c => c.type === ChannelType.GuildText &&
-             c.name === name &&
-             c.parentId === category.id
-      );
-
-      await getOrCreateTextChannel(
+      const result = await getOrCreateTextChannel(
         guild,
         name,
         category,
-        definition.staffOnly ? staffOverwrites : []
+        definition.staffOnly
+          ? staffOverwrites
+          : []
       );
 
-      if (!oldChannel) created.channels++;
+      channelsByName.set(name, result.channel);
+
+      if (result.created) {
+        created.channels++;
+      }
     }
   }
 
-  const channel = name => guild.channels.cache.find(
-    c => c.type === ChannelType.GuildText && c.name === name
-  );
-
   const posts = [
-    [channel('welcome'), welcomeEmbed(), 'NexusGuard Setup • Welcome'],
-    [channel('rules'), rulesEmbed(), 'NexusGuard Setup • Rules'],
-    [channel('hire-me'), hireEmbed(), 'NexusGuard Setup • Hire'],
-    [channel('bot-showcase'), projectTemplate('Discord Bot'), 'NexusGuard Setup • Bot Template'],
-    [channel('website-showcase'), projectTemplate('Website'), 'NexusGuard Setup • Website Template'],
-    [channel('minecraft-projects'), projectTemplate('Minecraft Project'), 'NexusGuard Setup • Minecraft Template']
+    [
+      'welcome',
+      welcomeEmbed(),
+      'NexusGuard Setup • Welcome'
+    ],
+    [
+      'rules',
+      rulesEmbed(),
+      'NexusGuard Setup • Rules'
+    ],
+    [
+      'hire-me',
+      hireEmbed(),
+      'NexusGuard Setup • Hire'
+    ],
+    [
+      'bot-showcase',
+      projectTemplate('Discord Bot'),
+      'NexusGuard Setup • Bot Template'
+    ],
+    [
+      'website-showcase',
+      projectTemplate('Website'),
+      'NexusGuard Setup • Website Template'
+    ],
+    [
+      'minecraft-projects',
+      projectTemplate('Minecraft Project'),
+      'NexusGuard Setup • Minecraft Template'
+    ]
   ];
 
-  for (const [target, embed, marker] of posts) {
-    if (target && await sendStarterPost(target, embed, marker)) {
+  for (const [name, embed, marker] of posts) {
+    const posted = await sendStarterPost(
+      channelsByName.get(name),
+      embed,
+      marker
+    );
+
+    if (posted) {
       created.posts++;
     }
   }
 
-  const ticketChannel = channel('open-a-ticket');
+  const ticketChannel =
+    channelsByName.get('open-a-ticket');
 
   if (ticketChannel) {
-    const recent = await ticketChannel.messages.fetch({ limit: 25 }).catch(() => null);
+    const recent = await ticketChannel.messages
+      .fetch({ limit: 50 })
+      .catch(() => null);
+
     const alreadyPosted = recent?.some(message =>
       message.author.id === guild.client.user.id &&
-      message.embeds.some(e => e.title === '✦ NexusGuard Support Desk')
+      message.embeds.some(
+        item => item.title === '✦ NexusGuard Support Desk'
+      )
     );
 
     if (!alreadyPosted) {
       const embed = new EmbedBuilder()
         .setColor(ACCENT)
         .setTitle('✦ NexusGuard Support Desk')
-        .setDescription([
-          'Open a private ticket for help, bug reports, or commissions.',
-          '',
+        .setDescription(
+          'Open a private ticket for help, bug reports, or commissions.\n\n' +
           'Choose the option that best describes your request.'
-        ].join('\n'));
+        );
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('nexus_ticket_support')
           .setLabel('Support')
           .setStyle(ButtonStyle.Primary),
+
         new ButtonBuilder()
           .setCustomId('nexus_ticket_bug')
           .setLabel('Bug Report')
           .setStyle(ButtonStyle.Secondary),
+
         new ButtonBuilder()
           .setCustomId('nexus_ticket_commission')
           .setLabel('Commission')
           .setStyle(ButtonStyle.Success)
       );
 
-      await ticketChannel.send({ embeds: [embed], components: [row] });
+      await ticketChannel.send({
+        embeds: [embed],
+        components: [row]
+      });
+
       created.posts++;
     }
   }
 
-  return { created, roles, requester };
+  return {
+    created,
+    roles,
+    requester: requester?.id ?? null
+  };
 }
 
 async function handleTicketButton(interaction) {
@@ -394,40 +467,114 @@ async function handleTicketButton(interaction) {
 
   const id = interaction.customId;
 
-  if (id.startsWith('nexus_ticket_')) {
-    if (!interaction.inGuild()) {
+  if (!id.startsWith('nexus_ticket_')) {
+    return false;
+  }
+
+  if (!interaction.inGuild()) {
+    if (interaction.isRepliable()) {
       await interaction.reply({
         content: 'Tickets can only be opened inside a server.',
         ephemeral: true
       });
-      return true;
     }
 
-    const guild = interaction.guild;
-    const member = interaction.member;
-    const kind = id.replace('nexus_ticket_', '');
+    return true;
+  }
 
-    const existing = guild.channels.cache.find(channel =>
-      channel.type === ChannelType.GuildText &&
-      channel.topic === `nexus-ticket:${interaction.user.id}`
-    );
+  if (id === 'nexus_ticket_close') {
+    const channel = interaction.channel;
 
-    if (existing) {
+    const openerId = channel?.topic?.startsWith(
+      'nexus-ticket:'
+    )
+      ? channel.topic.slice('nexus-ticket:'.length)
+      : null;
+
+    const isStaff =
+      interaction.memberPermissions?.has(
+        PermissionFlagsBits.ManageChannels
+      ) ?? false;
+
+    if (
+      interaction.user.id !== openerId &&
+      !isStaff
+    ) {
       await interaction.reply({
-        content: `You already have an open ticket: ${existing}`,
+        content:
+          'Only the ticket opener or a member with Manage Channels can close this ticket.',
         ephemeral: true
       });
+
       return true;
     }
 
+    await interaction.reply({
+      content: 'Closing this ticket in a moment…',
+      ephemeral: true
+    });
+
+    await channel.send(
+      `Ticket closed by ${interaction.user.tag}. This channel will be deleted in 5 seconds.`
+    ).catch(() => {});
+
+    setTimeout(() => {
+      channel
+        .delete(`Ticket closed by ${interaction.user.tag}`)
+        .catch(() => {});
+    }, 5000);
+
+    return true;
+  }
+
+  const kinds = {
+    nexus_ticket_support: 'support',
+    nexus_ticket_bug: 'bug',
+    nexus_ticket_commission: 'commission'
+  };
+
+  const kind = kinds[id];
+
+  if (!kind) return false;
+
+  const guild = interaction.guild;
+
+  const existing = guild.channels.cache.find(
+    channel =>
+      channel.type === ChannelType.GuildText &&
+      channel.topic ===
+        `nexus-ticket:${interaction.user.id}`
+  );
+
+  if (existing) {
+    await interaction.reply({
+      content: `You already have an open ticket: ${existing}`,
+      ephemeral: true
+    });
+
+    return true;
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
     const safeName = interaction.user.username
       .toLowerCase()
       .replace(/[^a-z0-9-]/g, '-')
       .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
       .slice(0, 35) || 'member';
 
-    const staffRoles = ['Founder', 'Administrator', 'Moderator']
-      .map(name => guild.roles.cache.find(role => role.name === name))
+    const staffRoles = [
+      'Founder',
+      'Administrator',
+      'Moderator'
+    ]
+      .map(name =>
+        guild.roles.cache.find(
+          role => role.name === name
+        )
+      )
       .filter(Boolean);
 
     const overwrites = [
@@ -464,142 +611,151 @@ async function handleTicketButton(interaction) {
       }))
     ];
 
-    await interaction.deferReply({ ephemeral: true });
+    const ticket = await guild.channels.create({
+      name: `ticket-${safeName}`.slice(0, 90),
+      type: ChannelType.GuildText,
+      topic: `nexus-ticket:${interaction.user.id}`,
+      permissionOverwrites: overwrites,
+      reason: `Ticket opened by ${interaction.user.tag}`
+    });
 
-    try {
-      const ticket = await guild.channels.create({
-        name: `ticket-${safeName}`.slice(0, 90),
-        type: ChannelType.GuildText,
-        topic: `nexus-ticket:${interaction.user.id}`,
-        permissionOverwrites: overwrites,
-        reason: `Ticket opened by ${interaction.user.tag}`
-      });
-
-      const closeRow = new ActionRowBuilder().addComponents(
+    const closeRow = new ActionRowBuilder()
+      .addComponents(
         new ButtonBuilder()
           .setCustomId('nexus_ticket_close')
           .setLabel('Close Ticket')
           .setStyle(ButtonStyle.Danger)
       );
 
-      const ticketEmbed = new EmbedBuilder()
-        .setColor(kind === 'commission' ? CYAN : ACCENT)
-        .setTitle(`✦ ${kind.charAt(0).toUpperCase() + kind.slice(1)} Ticket`)
-        .setDescription([
-          `Hello ${interaction.user}, welcome to your private ticket.`,
-          '',
-          '**Please provide:**',
-          '• A clear description of your request',
-          '• Relevant links or screenshots',
-          '• What you have tried so far, if applicable',
-          '',
-          'Never share passwords, bot tokens, or private keys here.'
-        ].join('\n'))
-        .setFooter({ text: `Opened by ${interaction.user.tag}` });
-
-      await ticket.send({
-        content: `${interaction.user} ${staffRoles.map(r => `<@&${r.id}>`).join(' ')}`.trim(),
-        embeds: [ticketEmbed],
-        components: [closeRow],
-        allowedMentions: {
-          users: [interaction.user.id],
-          roles: []
-        }
+    const ticketEmbed = new EmbedBuilder()
+      .setColor(
+        kind === 'commission' ? CYAN : ACCENT
+      )
+      .setTitle(
+        `✦ ${kind.charAt(0).toUpperCase() + kind.slice(1)} Ticket`
+      )
+      .setDescription([
+        `Hello ${interaction.user}, welcome to your private ticket.`,
+        '',
+        '**Please provide:**',
+        '• A clear description of your request',
+        '• Relevant links or screenshots',
+        '• What you have tried so far, if applicable',
+        '',
+        'Never share passwords, bot tokens, or private keys here.'
+      ].join('\n'))
+      .setFooter({
+        text: `Opened by ${interaction.user.tag}`
       });
 
-      await interaction.editReply({
-        content: `Your private ticket is ready: ${ticket}`
-      });
-    } catch (error) {
-      console.error('[NexusGuard Ticket]', error);
-      await interaction.editReply({
-        content: 'I could not create the ticket. Check my Manage Channels permission and role position.'
-      });
-    }
-
-    return true;
-  }
-
-  if (id === 'nexus_ticket_close') {
-    if (!interaction.inGuild()) return true;
-
-    const channel = interaction.channel;
-    const openerId = channel?.topic?.startsWith('nexus-ticket:')
-      ? channel.topic.slice('nexus-ticket:'.length)
-      : null;
-
-    const isStaff = interaction.memberPermissions?.has(
-      PermissionFlagsBits.ManageChannels
-    );
-
-    if (interaction.user.id !== openerId && !isStaff) {
-      await interaction.reply({
-        content: 'Only the ticket opener or a member with Manage Channels can close this ticket.',
-        ephemeral: true
-      });
-      return true;
-    }
-
-    await interaction.reply({
-      content: 'Closing this ticket in a moment…',
-      ephemeral: true
+    await ticket.send({
+      content: `${interaction.user}`,
+      embeds: [ticketEmbed],
+      components: [closeRow],
+      allowedMentions: {
+        users: [interaction.user.id],
+        roles: []
+      }
     });
 
-    await channel.send(
-      `Ticket closed by ${interaction.user.tag}. This channel will now be deleted.`
-    ).catch(() => {});
+    await interaction.editReply({
+      content: `Your private ticket is ready: ${ticket}`
+    });
+  } catch (error) {
+    console.error('[NexusGuard Ticket]', error);
 
-    setTimeout(() => {
-      channel.delete(`Ticket closed by ${interaction.user.tag}`).catch(() => {});
-    }, 5000);
-
-    return true;
+    await interaction.editReply({
+      content:
+        'I could not create the ticket. Check my Manage Channels permission and role position.'
+    }).catch(() => {});
   }
 
-  return false;
+  return true;
 }
 
 function registerSetupCommand(client) {
   const command = new SlashCommandBuilder()
     .setName('setupserver')
-    .setDescription('Create the Nexus Development showcase server layout')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+    .setDescription(
+      'Create the Nexus Development showcase server layout'
+    )
+    .setDefaultMemberPermissions(
+      PermissionFlagsBits.Administrator
+    );
 
   client.once('ready', async () => {
     try {
-      const existing = await client.application.commands.fetch();
-      const found = existing.find(c => c.name === 'setupserver');
+      const commands = client.application?.commands;
 
-      if (!found) {
-        await client.application.commands.create(command.toJSON());
-        console.log('[NexusGuard] Registered /setupserver');
+      if (!commands) {
+        throw new Error(
+          'Discord application is not available yet.'
+        );
+      }
+
+      const existing = await commands.fetch();
+
+      const found = existing.find(
+        item => item.name === 'setupserver'
+      );
+
+      if (found) {
+        await commands.edit(
+          found.id,
+          command.toJSON()
+        );
+
+        console.log(
+          '[NexusGuard] Updated /setupserver'
+        );
+      } else {
+        await commands.create(command.toJSON());
+
+        console.log(
+          '[NexusGuard] Registered /setupserver'
+        );
       }
     } catch (error) {
-      console.error('[NexusGuard] Could not register /setupserver:', error);
+      console.error(
+        '[NexusGuard] Could not register /setupserver:',
+        error
+      );
     }
   });
 
   client.on('interactionCreate', async interaction => {
     try {
-      if (interaction.isChatInputCommand() &&
-          interaction.commandName === 'setupserver') {
+      if (
+        interaction.isChatInputCommand() &&
+        interaction.commandName === 'setupserver'
+      ) {
         if (!interaction.inGuild()) {
-          return interaction.reply({
-            content: 'Use this command inside your Discord server.',
+          await interaction.reply({
+            content:
+              'Use this command inside your Discord server.',
             ephemeral: true
           });
+
+          return;
         }
 
-        if (!interaction.memberPermissions?.has(
-          PermissionFlagsBits.Administrator
-        )) {
-          return interaction.reply({
-            content: 'Only server administrators can run this setup.',
+        if (
+          !interaction.memberPermissions?.has(
+            PermissionFlagsBits.Administrator
+          )
+        ) {
+          await interaction.reply({
+            content:
+              'Only server administrators can run this setup.',
             ephemeral: true
           });
+
+          return;
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({
+          ephemeral: true
+        });
 
         try {
           const result = await setupServer(
@@ -621,13 +777,22 @@ function registerSetupCommand(client) {
               'Existing matching channels and roles were reused.',
               'Review role positions and assign staff roles manually.'
             ].join('\n'))
-            .setFooter({ text: 'NexusGuard • Purple × Cyan' });
+            .setFooter({
+              text: 'NexusGuard • Purple × Cyan'
+            });
 
-          await interaction.editReply({ embeds: [embed] });
-        } catch (error) {
-          console.error('[NexusGuard Setup]', error);
           await interaction.editReply({
-            content: `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
+            embeds: [embed]
+          });
+        } catch (error) {
+          console.error(
+            '[NexusGuard Setup]',
+            error
+          );
+
+          await interaction.editReply({
+            content:
+              `Setup stopped: ${String(error.message || error).slice(0, 1500)}`
           });
         }
 
@@ -636,11 +801,19 @@ function registerSetupCommand(client) {
 
       await handleTicketButton(interaction);
     } catch (error) {
-      console.error('[NexusGuard Interaction]', error);
+      console.error(
+        '[NexusGuard Interaction]',
+        error
+      );
 
-      if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+      if (
+        interaction.isRepliable() &&
+        !interaction.replied &&
+        !interaction.deferred
+      ) {
         await interaction.reply({
-          content: 'Something went wrong while processing that action.',
+          content:
+            'Something went wrong while processing that action.',
           ephemeral: true
         }).catch(() => {});
       }
