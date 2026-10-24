@@ -122,19 +122,6 @@ const commands = [
   new SlashCommandBuilder().setName("website").setDescription("Get the NexusGuard dashboard link"),
   new SlashCommandBuilder().setName("help").setDescription("Show NexusGuard commands"),
   new SlashCommandBuilder().setName("commands").setDescription("Display the complete categorized command directory"),
-  // Intentional no-action category dividers: these only label command groups in Discord.
-  new SlashCommandBuilder().setName("general").setDescription("━━━━━━━━ GENERAL COMMANDS · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("server-tools").setDescription("━━━━━━━━ SERVER TOOLS · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("moderation-tools").setDescription("━━━━━━━━ MODERATION · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("roles").setDescription("━━━━━━━━ ROLES & MEMBERS · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("tickets").setDescription("━━━━━━━━ TICKETS · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("community").setDescription("━━━━━━━━ COMMUNITY · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("automod").setDescription("━━━━━━━━ AUTOMOD & SECURITY · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("levels").setDescription("━━━━━━━━ LEVELS & XP · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("economy").setDescription("━━━━━━━━ ECONOMY · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("fun").setDescription("━━━━━━━━ FUN & GAMES · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("configuration").setDescription("━━━━━━━━ CONFIGURATION · CATEGORY DIVIDER ━━━━━━━━"),
-  new SlashCommandBuilder().setName("owner").setDescription("━━━━━━━━ OWNER-ONLY TOOLS · CATEGORY DIVIDER ━━━━━━━━"),
   new SlashCommandBuilder().setName("invite").setDescription("Get the NexusGuard invite link"),
   new SlashCommandBuilder().setName("ping").setDescription("Check bot latency"),
   new SlashCommandBuilder().setName("botinfo").setDescription("View bot information"),
@@ -239,44 +226,24 @@ const commands = [
   new SlashCommandBuilder().setName("serverstats").setDescription("View server stats")
 ].map(c => c.toJSON());
 
-// Convert the old visual divider commands into real Discord command groups.
-// Commands with Discord-side default permissions stay top-level so their
-// existing permission restrictions are preserved exactly.
-const COMMAND_GROUPS = {
-  general: new Set(["website", "help", "commands", "invite", "ping", "botinfo", "uptime"]),
-  "server-tools": new Set(["serverinfo", "membercount", "servericon", "userinfo", "avatar", "roleinfo", "channelinfo", "rolelist", "channellist", "memberstats", "serverstats"]),
-  moderation: new Set(["warnings", "untimeout", "clearwarnings"]),
-  roles: new Set(["nickname", "roleadd", "roleremove"]),
-  community: new Set(["poll", "announce", "say", "remind"]),
-  fun: new Set(["coinflip", "dice", "eightball", "choose", "rate", "rps"]),
-  configuration: new Set(["settings"])
-};
-const DIVIDER_NAMES = new Set(["general", "server-tools", "moderation-tools", "roles", "tickets", "community", "automod", "levels", "economy", "fun", "configuration", "owner"]);
-function buildGroupedCommands() {
-  const flat = commands.filter(c => !DIVIDER_NAMES.has(c.name));
-  const groups = new Map();
-  const output = [];
-  for (const cmd of flat) {
-    const groupName = Object.keys(COMMAND_GROUPS).find(name => COMMAND_GROUPS[name].has(cmd.name));
-    // Preserve Discord-enforced permission defaults on their existing commands.
-    if (!groupName || cmd.default_member_permissions != null || cmd.dm_permission === false && !groupName) {
-      output.push(cmd);
-      continue;
+// Register only real, actionable top-level slash commands. Decorative separator
+// commands and synthetic command groups are intentionally not registered.
+function buildCommandList() {
+  const seen = new Set();
+  for (const command of commands) {
+    if (seen.has(command.name)) {
+      throw new Error(`Duplicate slash command name detected: ${command.name}`);
     }
-    if (!groups.has(groupName)) groups.set(groupName, []);
-    groups.get(groupName).push({ type: 1, name: cmd.name, description: cmd.description.slice(0, 100), options: cmd.options || [] });
+    seen.add(command.name);
   }
-  for (const [name, options] of groups) {
-    output.push({ type: 1, name, description: `${name.replace(/-/g, " ")} commands`, options });
-  }
-  return output;
+  return commands;
 }
 
 async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(TOKEN);
-  const body = buildGroupedCommands();
+  const body = buildCommandList();
   const result = await rest.put(Routes.applicationCommands(CLIENT_ID), { body });
-  console.log(`Registered ${result.length} global slash commands (${body.filter(c => c.options?.some(o => o.type === 1)).length} command groups).`);
+  console.log(`Registered ${result.length} unique global slash commands (separator commands removed).`);
 }
 
 client.once("ready", () => {
