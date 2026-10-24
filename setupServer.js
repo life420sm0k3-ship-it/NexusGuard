@@ -841,11 +841,18 @@ function registerSetupCommand(client) {
   interaction.guildId
 );
 
-const result = await setupServer(
-  guild,
-  interaction.user
-);
+const guildId = interaction.guildId;
 
+if (!guildId) {
+  await interaction.editReply({
+    content: "Please run /setupserver inside your Discord server."
+  });
+  return;
+}
+
+const guild = await interaction.client.guilds.fetch(guildId);
+
+const result = await setupServer(guild, interaction.user);
           const embed = new EmbedBuilder()
             .setColor(ACCENT)
             .setTitle('✦ NexusGuard Setup Complete')
