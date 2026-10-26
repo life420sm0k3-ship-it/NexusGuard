@@ -2,6 +2,10 @@
 
 An expanded Node.js/Discord.js multi-server platform with a responsive dashboard, Discord OAuth2 sign-in, granular server access checks, SQLite persistence, 80 slash commands, background delivery workers, scheduled announcements, giveaway closeout, server backup export, and a global owner console.
 
+## Render Node.js version fix
+
+This project pins Node.js to 22.x because the previous deployment selected Node.js 26 while using an older `better-sqlite3` release, causing native compilation to fail. The repository includes `.node-version` and `NODE_VERSION=22.22.0` in `render.yaml`. If your Render service has a manually configured `NODE_VERSION`, set it to `22.22.0` (or remove the override) before redeploying.
+
 ## Included modules
 
 - **Discord bot:** slash-command registration, moderation (warn, warnings, clear warnings, timeout, untimeout, kick, ban, unban, purge, slowmode, lock/unlock), role/channel management, server info, polls, suggestions, announcements, tickets, ticket stats/close, giveaways, reminders, custom text commands, level/XP, leaderboard, profile, balance/daily, settings export, and audit queries.
@@ -52,3 +56,10 @@ The project intentionally documents features that are still future work, includi
 ## Notes
 
 The bot and web app run in one process for straightforward Render deployment. For larger scale, split worker and web processes, add migrations/backups, and use an external durable database. The `/health` endpoint returns runtime status. `/api/guild/:guildId/export` downloads a JSON backup for an authorized server manager. Scheduled jobs are in-process and the service must remain online for delivery. Check Render logs if bot login or command registration fails.
+
+
+## Server setup wizard and expanded web controls
+
+After a server is selected, first-time setup asks the manager to choose a server profile (gaming, Minecraft, community, creator, business, roleplay, support, or custom). The wizard can apply a recommended NexusGuard settings template and tailors the dashboard heading and setup suggestions. It does not silently create roles or channels.
+
+The dashboard also includes direct timeout/kick/ban/unban actions (subject to bot permissions and Discord role hierarchy), channel quick-create, per-server backups and scheduling, plus owner-only platform metrics, database counts, runtime diagnostics, command catalog, global announcements, and quick links into connected servers. Destructive moderation actions require confirmation in the browser and are written to the audit log. Channel permissions and role permissions should still be reviewed in Discord after creation.
