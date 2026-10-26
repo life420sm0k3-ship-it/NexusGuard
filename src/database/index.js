@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS owner_hourly_report_runs (
 `);
 
 const defaults = {
- prefix: '!', accent: '#8b5cf6', welcomeEnabled: false, welcomeChannelId: '', welcomeMessage: 'Welcome {user} to **{server}**!',
+ prefix: '!', serverType: 'custom', setupComplete: false, setupCompletedAt: '', accent: '#8b5cf6', welcomeEnabled: false, welcomeChannelId: '', welcomeMessage: 'Welcome {user} to **{server}**!',
  leaveEnabled: false, leaveChannelId: '', logChannelId: '', modLogEnabled: true, automodEnabled: true,
  antiSpam: true, antiInvite: false, antiMassMention: true, antiRaid: true, mentionLimit: 5,
  ticketCategoryId: '', ticketStaffRoleId: '', ticketLogChannelId: '', modRoleIds: [],
