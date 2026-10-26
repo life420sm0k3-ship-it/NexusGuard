@@ -7,6 +7,8 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -16,6 +18,8 @@ services:
       - key: DISCORD_CLIENT_ID
         sync: false
       - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DEV_GUILD_ID
         sync: false
       - key: DISCORD_REDIRECT_URI
         sync: false

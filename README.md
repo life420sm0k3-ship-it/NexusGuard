@@ -63,3 +63,22 @@ The bot and web app run in one process for straightforward Render deployment. Fo
 After a server is selected, first-time setup asks the manager to choose a server profile (gaming, Minecraft, community, creator, business, roleplay, support, or custom). The wizard can apply a recommended NexusGuard settings template and tailors the dashboard heading and setup suggestions. It does not silently create roles or channels.
 
 The dashboard also includes direct timeout/kick/ban/unban actions (subject to bot permissions and Discord role hierarchy), channel quick-create, per-server backups and scheduling, plus owner-only platform metrics, database counts, runtime diagnostics, command catalog, global announcements, and quick links into connected servers. Destructive moderation actions require confirmation in the browser and are written to the audit log. Channel permissions and role permissions should still be reviewed in Discord after creation.
+
+### Slash commands do not appear
+
+- Confirm the Render service is online and logs show `Logged in as ...` followed by `Successfully synced ... slash commands`. If `command-registration` appears in logs, read the error text and code; the dashboard Owner Console also has a **Sync slash commands** button.
+- In Render, set `DEV_GUILD_ID` to the numeric ID of the server where you are testing. Enable Discord Developer Mode, right-click/long-press the server, and copy its ID. This registers commands directly to that server so updates appear quickly. Leave `DEV_GUILD_ID` blank to publish global commands to all servers; global changes can take up to an hour to propagate.
+- `DISCORD_CLIENT_ID` must be the Application ID from the same Discord Developer Portal application as `DISCORD_TOKEN`. The sync code uses the connected bot application's ID when available.
+- When inviting the bot, include both `bot` and `applications.commands` OAuth2 scopes. If it was invited without `applications.commands`, generate a fresh invite with both scopes and re-invite it.
+- Check that the bot is actually in the server and that you have permission to use application commands. After a sync, close/reopen Discord or refresh the client if needed.
+
+
+## Slash command registration troubleshooting
+
+NexusGuard contains a curated set of Discord slash commands and synchronizes them on startup. Check the Render logs for `Successfully synced` and the registered command names. If registration fails, the log includes the Discord HTTP status and a likely configuration hint.
+
+For fast testing, set `DEV_GUILD_ID` to the numeric ID of a server that the bot has already joined. Guild commands usually appear quickly. Leave `DEV_GUILD_ID` blank when you are ready to register globally; global command updates can take longer to propagate.
+
+**Important environment variables:** `DISCORD_TOKEN` and `DISCORD_CLIENT_ID` must belong to the same Discord application. `DISCORD_REDIRECT_URI` must exactly match the OAuth2 redirect URI in the Discord Developer Portal, and `DASHBOARD_URL` must be the deployed website origin. Invite the bot using both `bot` and `applications.commands` scopes.
+
+The dashboard UI has intentionally been retained. This release focuses on command synchronization diagnostics, deployment reliability, and preserving the existing multi-server dashboard.
