@@ -1,1 +1,64 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090b14"><title>NexusGuard — Discord Security</title><link rel="stylesheet" href="/style.css"></head><body class="landing"><nav class="topnav"><a class="brand" href="/"><span class="brand-mark">N</span>NEXUS<span class="muted">GUARD</span></a><a class="button ghost" href="/auth/login">Sign in with Discord</a></nav><main class="hero"><div class="eyebrow"><span class="pulse"></span> MULTI-SERVER SECURITY PLATFORM</div><h1>Protect your community.<br><span class="gradient">Command your servers.</span></h1><p class="lead">One connected platform for moderation, automation, tickets, community tools, analytics, and global server management.</p><div class="hero-actions"><a class="button primary" href="/auth/login">Continue with Discord <span>↗</span></a><a class="button ghost" href="#features">Explore features</a></div><div id="login-error" class="notice hidden"></div><div class="trust-row"><span>◈ Multi-server dashboard</span><span>◈ Permission-aware access</span><span>◈ Owner control center</span></div><div class="preview-shell"><div class="preview-top"><span></span><span></span><span></span><b>NEXUSGUARD / OVERVIEW</b><small>SECURE CONSOLE</small></div><div class="preview-content"><aside class="preview-side"><div class="mini-logo">N</div><i>⌂</i><i>▦</i><i>⛨</i><i>⚙</i></aside><div class="preview-main"><div class="preview-heading"><div><small>CONTROL CENTER</small><h2>Your servers, at a glance.</h2></div><span class="status"><i></i> SYSTEM ONLINE</span></div><div class="metric-grid"><div class="metric"><small>PROTECTION</small><strong>24<span>/7</span></strong><em>Always-on tooling</em></div><div class="metric"><small>SERVER CONTROL</small><strong>Multi</strong><em>Permission-aware</em></div><div class="metric"><small>OPERATIONS</small><strong>Unified</strong><em>One dashboard</em></div></div><div class="preview-bars"><div><b>Security controls</b><span>Configurable</span><div class="bar"><i style="width:83%"></i></div></div><div><b>Community tools</b><span>Connected modules</span><div class="bar"><i style="width:69%"></i></div></div></div></div></div></div></main><section id="features" class="feature-section"><div class="section-kicker">BUILT FOR COMMUNITIES THAT GROW</div><h2>Everything in one command center.</h2><div class="features"><article><span>⛨</span><h3>Security & moderation</h3><p>Warnings, timeouts, bans, anti-spam, invite filtering, mass-mention protection, audit trails, and case history.</p></article><article><span>⌘</span><h3>Server operations</h3><p>Manage channels, roles, welcome settings, logging, slowmode, automations, and configurable server behavior.</p></article><article><span>✦</span><h3>Community engagement</h3><p>Tickets, suggestions, giveaways, polls, leveling, profiles, reminders, and member rewards.</p></article><article><span>▥</span><h3>Owner overview</h3><p>A restricted global view of connected servers, runtime health, command count, database totals, and recent errors.</p></article></div></section><footer><a class="brand" href="/"><span class="brand-mark">N</span>NEXUS<span class="muted">GUARD</span></a><span>Built for safer, better-managed communities.</span><a href="/health">Service health ↗</a></footer><script>const p=new URLSearchParams(location.search);if(p.has('loginError')){const el=document.getElementById('login-error');el.textContent='Discord sign-in could not be completed ('+p.get('loginError')+'). Check the OAuth redirect URL and environment variables.';el.classList.remove('hidden');}</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080a12">
+  <meta name="description" content="NexusGuard is a Discord community command center for moderation, server security, tickets, automation, and analytics.">
+  <title>NexusGuard — Your community. Under control.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="landing landing-v2">
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <nav class="topnav topnav-v2">
+    <a class="brand" href="/" aria-label="NexusGuard home"><span class="brand-mark">N</span><span>NEXUS<span class="muted">GUARD</span></span></a>
+    <div class="nav-links"><a href="#platform">Platform</a><a href="#features">Features</a><a href="#how-it-works">How it works</a></div>
+    <a class="button ghost nav-login" href="/auth/login">Sign in <span aria-hidden="true">↗</span></a>
+  </nav>
+
+  <main>
+    <section class="hero hero-v2">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse"></span> THE COMMUNITY OPERATIONS PLATFORM</div>
+        <h1>Your server.<br><span class="gradient">Your rules.</span><br>One command center.</h1>
+        <p class="lead">Bring moderation, protection, support, and community tools together in one sharp, easy-to-use Discord dashboard.</p>
+        <div class="hero-actions"><a class="button primary hero-cta" href="/auth/login">Connect with Discord <span aria-hidden="true">↗</span></a><a class="button ghost" href="#features">Explore the platform <span aria-hidden="true">↓</span></a></div>
+        <div class="hero-proof"><span><i></i> Permission-aware server access</span><span><i></i> Built for desktop and mobile</span></div>
+      </div>
+      <div class="hero-art" aria-label="Illustration of a secure server dashboard">
+        <div class="art-orbit orbit-a"></div><div class="art-orbit orbit-b"></div>
+        <div class="shield-glow"></div>
+        <div class="shield-card">
+          <svg class="shield-svg" viewBox="0 0 180 200" role="img" aria-label="NexusGuard shield"><defs><linearGradient id="shieldFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a995ff"/><stop offset=".52" stop-color="#6c5ce7"/><stop offset="1" stop-color="#43d9d0"/></linearGradient><linearGradient id="shieldStroke" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6dcff"/><stop offset="1" stop-color="#5ce4dc"/></linearGradient></defs><path d="M90 10 153 34v53c0 43-26 78-63 101C53 165 27 130 27 87V34Z" fill="url(#shieldFill)" fill-opacity=".18" stroke="url(#shieldStroke)" stroke-width="2.5"/><path d="M90 25 139 43v43c0 34-19 62-49 81-30-19-49-47-49-81V43Z" fill="url(#shieldFill)" fill-opacity=".28"/><path d="m62 94 18 18 39-42" fill="none" stroke="#dffdfa" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="shield-label"><span class="mini-live"></span> NEXUS CORE <small>PROTECTION ACTIVE</small></div>
+        </div>
+        <div class="float-card float-top"><span class="float-icon violet">✦</span><span><b>Security systems</b><small>Configured for your server</small></span><span class="float-check">✓</span></div>
+        <div class="float-card float-bottom"><span class="float-icon mint">↗</span><span><b>Operations overview</b><small>Everything in one place</small></span><span class="float-dots">•••</span></div>
+        <div class="orbit-node node-one"></div><div class="orbit-node node-two"></div><div class="orbit-node node-three"></div>
+      </div>
+    </section>
+
+    <section class="signal-strip" id="platform"><div><span class="signal-number">01</span><span><b>Protect</b><small>Safety tools and moderation</small></span></div><div><span class="signal-number">02</span><span><b>Organize</b><small>Settings, tickets, and workflows</small></span></div><div><span class="signal-number">03</span><span><b>Understand</b><small>Logs and server insights</small></span></div><div><span class="signal-number">04</span><span><b>Scale</b><small>Manage multiple communities</small></span></div></section>
+
+    <section id="features" class="feature-section feature-section-v2">
+      <div class="section-head"><div class="section-kicker">BUILT FOR THE WAY COMMUNITIES RUN</div><h2>Less chaos.<br><span class="gradient">More control.</span></h2><p>Useful tools, clear settings, and a dashboard designed to make server management feel simpler.</p></div>
+      <div class="features features-v2">
+        <article class="feature-card"><span class="feature-icon icon-purple">⛨</span><div class="feature-index">01 / PROTECT</div><h3>Moderation & safety</h3><p>Manage warnings, timeouts, bans, anti-spam settings, invite filtering, and moderation history.</p><div class="feature-tags"><span>AutoMod</span><span>Audit trail</span></div></article>
+        <article class="feature-card"><span class="feature-icon icon-cyan">⌘</span><div class="feature-index">02 / CONFIGURE</div><h3>Server operations</h3><p>Keep welcome messages, logging, roles, channels, and community preferences in one place.</p><div class="feature-tags"><span>Server settings</span><span>Multi-server</span></div></article>
+        <article class="feature-card"><span class="feature-icon icon-pink">✦</span><div class="feature-index">03 / CONNECT</div><h3>Community engagement</h3><p>Bring together tickets, suggestions, giveaways, polls, reminders, and progression tools.</p><div class="feature-tags"><span>Support</span><span>Engagement</span></div></article>
+        <article class="feature-card"><span class="feature-icon icon-gold">▥</span><div class="feature-index">04 / UNDERSTAND</div><h3>Activity & insights</h3><p>Review recorded actions, check configuration, and see the server information available to the bot.</p><div class="feature-tags"><span>Activity logs</span><span>Diagnostics</span></div></article>
+        <article class="feature-card feature-card-wide"><div class="wide-copy"><div class="feature-index">05 / GLOBAL OPERATIONS</div><h3>A dedicated owner console.</h3><p>Authorized owners get a separate view for connected servers, bot health, runtime errors, command diagnostics, and private status-report testing.</p><a href="/auth/login" class="text-link">Open the command center <span aria-hidden="true">↗</span></a></div><div class="mini-console"><div class="console-top"><span></span><span></span><span></span><b>GLOBAL STATUS</b></div><div class="console-line"><i class="console-pulse"></i><span>Discord gateway</span><b>CONNECTED WHEN ONLINE</b></div><div class="console-line"><i class="console-pulse cyan-pulse"></i><span>Server access</span><b>PERMISSION CHECKED</b></div><div class="console-line"><i class="console-pulse purple-pulse"></i><span>Owner reports</span><b>CONFIGURABLE</b></div></div></article>
+      </div>
+    </section>
+
+    <section class="workflow-section" id="how-it-works"><div class="workflow-copy"><div class="section-kicker">UP AND RUNNING IN A FEW STEPS</div><h2>Simple to start.<br><span class="gradient">Ready to grow.</span></h2><p>Connect your Discord account, choose a server you have permission to manage, then configure the tools your community needs.</p><a class="button primary" href="/auth/login">Get started with Discord <span aria-hidden="true">↗</span></a></div><div class="workflow-steps"><article><span>01</span><div><h3>Sign in securely</h3><p>Use Discord OAuth to identify your account.</p></div></article><article><span>02</span><div><h3>Choose your server</h3><p>Manage servers your account is allowed to control and that NexusGuard has joined.</p></div></article><article><span>03</span><div><h3>Make it yours</h3><p>Save settings, review activity, and tune your community setup.</p></div></article></div></section>
+
+    <section class="final-cta"><div class="cta-grid"></div><div class="section-kicker">YOUR COMMUNITY, IN SYNC</div><h2>Take control of your<br><span class="gradient">Discord workspace.</span></h2><p>One place for the tools that keep your community moving.</p><a class="button primary hero-cta" href="/auth/login">Continue with Discord <span aria-hidden="true">↗</span></a><div id="login-error" class="notice hidden" role="alert"></div></section>
+  </main>
+  <footer class="footer-v2"><a class="brand" href="/"><span class="brand-mark">N</span><span>NEXUS<span class="muted">GUARD</span></span></a><span>Community management, with clarity.</span><a href="/health">Service health ↗</a></footer>
+  <script>const p=new URLSearchParams(location.search);if(p.has('loginError')){const el=document.getElementById('login-error');el.textContent='Discord sign-in could not be completed ('+p.get('loginError')+'). Check the OAuth redirect URL and environment variables.';el.classList.remove('hidden');el.scrollIntoView({behavior:'smooth',block:'center'});}</script>
+</body>
+</html>

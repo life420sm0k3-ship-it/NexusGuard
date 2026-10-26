@@ -28,6 +28,7 @@ $('#scheduled-table')?.addEventListener('click',async e=>{const b=e.target.close
 $('#export-server-backup')?.addEventListener('click',()=>{if(!currentGuild)return alertBox('Select a server first.');window.location.href=`/api/guild/${currentGuild}/export`});
 $('#test-owner-report')?.addEventListener('click',async()=>{try{const d=await api('/api/owner/report-test',{method:'POST',body:'{}'});alertBox(d.message||'Test DM sent.','success')}catch(e){alertBox(e.message)}});
 $('#load-command-catalog')?.addEventListener('click',async()=>{try{const d=await api('/api/owner/commands');$('#command-catalog').innerHTML=d.commands.map(c=>`<div class="error-item"><b>/${esc(c.name)}</b> <small>• ${esc(c.category)}</small><br>${esc(c.description)}</div>`).join('')}catch(e){alertBox(e.message)}});
+$('#sync-slash-commands')?.addEventListener('click',async()=>{const b=$('#sync-slash-commands');b.disabled=true;b.textContent='Syncing commands…';try{const d=await api('/api/owner/commands/sync',{method:'POST',body:'{}'});alertBox(d.message||`Synced ${d.count} commands.`, 'success');await loadOwner();}catch(e){alertBox(e.message)}finally{b.disabled=false;b.textContent='Sync slash commands'}});
 $('#logout').addEventListener('click',async()=>{try{await api('/auth/logout',{method:'POST',body:'{}'});}finally{location.href='/'}});
 boot();
 
