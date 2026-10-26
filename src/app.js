@@ -78,12 +78,59 @@ app.post('/api/guild/:guildId/scheduled',requireLogin,async(req,res)=>{try{const
 app.delete('/api/guild/:guildId/scheduled/:id',requireLogin,async(req,res)=>{try{const g=await dashboardGuild(req);const r=db.prepare('DELETE FROM scheduled_messages WHERE id=? AND guild_id=? AND sent=0').run(Number(req.params.id),g.id);if(!r.changes)return res.status(404).json({error:'Pending scheduled message not found.'});audit(g.id,req.session.user.id,'scheduled_message_cancelled',req.params.id);res.json({ok:true});}catch(e){res.status(e.status||500).json({error:e.message||'Could not cancel message.'});}});
 app.get('/api/guild/:guildId/export',requireLogin,async(req,res)=>{try{await dashboardGuild(req);const id=req.params.guildId;const data={exportedAt:new Date().toISOString(),guildId:id,settings:getSettings(id),warnings:db.prepare('SELECT * FROM warnings WHERE guild_id=? ORDER BY id DESC LIMIT 5000').all(id),cases:db.prepare('SELECT * FROM cases WHERE guild_id=? ORDER BY id DESC LIMIT 5000').all(id),tickets:db.prepare('SELECT * FROM tickets WHERE guild_id=? ORDER BY id DESC LIMIT 5000').all(id),audit:db.prepare('SELECT * FROM audit_log WHERE guild_id=? ORDER BY id DESC LIMIT 5000').all(id),suggestions:db.prepare('SELECT * FROM suggestions WHERE guild_id=? ORDER BY id DESC LIMIT 5000').all(id)};audit(id,req.session.user.id,'data_export');res.setHeader('Content-Type','application/json');res.setHeader('Content-Disposition',`attachment; filename="nexusguard-${id}-backup.json"`);res.send(JSON.stringify(data,null,2));}catch(e){res.status(e.status||500).json({error:e.message||'Export failed.'});}});
 app.get('/api/owner/commands',requireLogin,requireOwner,(req,res)=>res.json({commands:commands.map(c=>({name:c.data.name,description:c.data.description,category:c.category}))}));
+app.post('/api/owner/commands/sync',requireLogin,requireOwner,async(req,res)=>{try{const result=await syncSlashCommands();res.json({ok:true,...result,message:result.scope==='guild'?`Synced ${result.count} slash commands to the selected test server. They should appear shortly.`:`Synced ${result.count} global slash commands. Discord may take up to an hour to show global updates; set DEV_GUILD_ID in Render for instant updates in a test server.`});}catch(e){captureError('command-registration-manual',e);res.status(502).json({error:`Slash-command sync failed: ${String(e?.message||e).slice(0,350)}`});}});
 app.get('/api/owner/database-stats',requireLogin,requireOwner,(req,res)=>{const tables=['guild_settings','audit_log','warnings','tickets','cases','user_xp','reminders','scheduled_messages','custom_commands','giveaways','suggestions','owner_hourly_report_runs'];const counts={};for(const t of tables){try{counts[t]=db.prepare(`SELECT COUNT(*) n FROM ${t}`).get().n}catch{counts[t]=0}}res.json({counts,uptime:Math.floor(process.uptime()),memory:process.memoryUsage(),node:process.version,platform:process.platform});});
 app.get('/api/owner/overview',requireLogin,requireOwner,async(req,res)=>{res.json({uptime:Math.floor(process.uptime()),botReady:client.isReady(),guildCount:client.guilds.cache.size,userCount:client.guilds.cache.reduce((n,g)=>n+(g.memberCount||0),0),commandCount:commands.length,warningCount:db.prepare('SELECT COUNT(*) n FROM warnings').get().n,ticketCount:db.prepare('SELECT COUNT(*) n FROM tickets').get().n,dbSize:'managed by SQLite',guilds:client.guilds.cache.map(g=>({id:g.id,name:g.name,members:g.memberCount,ownerId:g.ownerId}))});});
 app.post('/api/owner/announce',requireLogin,requireOwner,async(req,res)=>{const {guildId,channelId,message}=req.body||{};if(!message||typeof message!=='string'||message.length>1800)return res.status(400).json({error:'Provide an announcement under 1800 characters.'});try{const g=client.guilds.cache.get(guildId);const c=g?.channels.cache.get(channelId);if(!c?.isTextBased())return res.status(400).json({error:'Server or text channel not found.'});await c.send({embeds:[new EmbedBuilder().setColor(0x8b5cf6).setTitle('NexusGuard Owner Announcement').setDescription(message).setTimestamp()]});audit(guildId,req.session.user.id,'owner_announcement',channelId,{message:message.slice(0,200)});res.json({ok:true});}catch(e){res.status(500).json({error:'Announcement failed. Check bot channel permissions.'});}});
 app.get('/api/owner/errors',requireLogin,requireOwner,(req,res)=>res.json({recent:recentErrors.slice(-30)}));
 const recentErrors=[];
-function captureError(area,error){const item={at:new Date().toISOString(),area,message:String(error?.message||error).slice(0,500)};recentErrors.push(item);if(recentErrors.length>100)recentErrors.shift();console.error(`[${area}]`,item.message)}
+function captureError(area,error){const detail=error?.rawError?.message?`${error.message} — ${error.rawError.message}`:String(error?.message||error);const item={at:new Date().toISOString(),area,message:detail.slice(0,700),code:error?.code??null,status:error?.status??error?.statusCode??null};recentErrors.push(item);if(recentErrors.length>100)recentErrors.shift();console.error(`[${area}]`,item.message,error?.code?`(code ${error.code})`:'',error?.status?`(HTTP ${error.status})`:'')}
+
+async function syncSlashCommands(){
+ if(!client.isReady())throw new Error('The Discord bot is not ready yet. Check Render logs and DISCORD_TOKEN.');
+ if(!process.env.DISCORD_TOKEN)throw new Error('DISCORD_TOKEN is missing in Render environment variables.');
+ const liveApplicationId=client.application?.id;
+ const configuredApplicationId=(process.env.DISCORD_CLIENT_ID||'').trim();
+ if(!liveApplicationId)throw new Error('Discord has not returned the bot application ID yet. Wait for the bot to finish connecting.');
+ if(configuredApplicationId && configuredApplicationId!==liveApplicationId){
+  throw new Error(`DISCORD_CLIENT_ID (${configuredApplicationId}) does not match the application belonging to DISCORD_TOKEN (${liveApplicationId}). Set both variables to the same Discord application.`);
+ }
+ const applicationId=liveApplicationId;
+ const guildId=(process.env.DEV_GUILD_ID||'').trim();
+ if(guildId&&!/^\d{17,20}$/.test(guildId))throw new Error('DEV_GUILD_ID must be a numeric Discord server ID, or be left blank for global commands.');
+ if(guildId&&!client.guilds.cache.has(guildId))throw new Error(`The bot is not currently in DEV_GUILD_ID ${guildId}. Invite this bot to that server or clear DEV_GUILD_ID to register globally.`);
+ let body;
+ try { body=commands.map(c=>c.data.toJSON()); }
+ catch(e) { throw new Error(`A slash command has an invalid Discord definition: ${e.message}`); }
+ const names=body.map(c=>c.name);
+ const duplicates=names.filter((name,index)=>names.indexOf(name)!==index);
+ if(duplicates.length)throw new Error(`Duplicate slash command name(s): ${[...new Set(duplicates)].join(', ')}.`);
+ const invalid=body.filter(c=>!/^[-a-z0-9]{1,32}$/.test(c.name)||!c.description||c.description.length>100);
+ if(invalid.length)throw new Error(`Invalid command definition(s): ${invalid.map(c=>c.name).join(', ')}.`);
+ if(body.length>100)throw new Error(`Discord allows at most 100 chat-input commands per scope; this build contains ${body.length}.`);
+ const rest=new REST({version:'10'}).setToken(process.env.DISCORD_TOKEN);
+ const route=guildId?Routes.applicationGuildCommands(applicationId,guildId):Routes.applicationCommands(applicationId);
+ let registered, lastError;
+ for(let attempt=1;attempt<=3;attempt++){
+  try { registered=await rest.put(route,{body}); lastError=null; break; }
+  catch(e){
+   lastError=e;
+   const retryable=Number(e?.status)>=500 || Number(e?.status)===429 || e?.code==='ECONNRESET' || e?.code==='ETIMEDOUT';
+   console.error(`[NexusGuard] Slash-command sync attempt ${attempt}/3 failed: ${e?.message||e} (status ${e?.status||'n/a'}, code ${e?.code||'n/a'})`);
+   if(!retryable||attempt===3)break;
+   await new Promise(resolve=>setTimeout(resolve,attempt*1500));
+  }
+ }
+ if(lastError){
+  const status=lastError.status?` HTTP ${lastError.status}.`:'';
+  const hint=lastError.status===401?' Check DISCORD_TOKEN.':lastError.status===403?' Check the bot token and application access.':lastError.status===404?' Check DISCORD_CLIENT_ID and DEV_GUILD_ID.':'';
+  throw new Error(`Discord rejected slash-command registration.${status}${hint} ${String(lastError.message||lastError).slice(0,250)}`);
+ }
+ const count=Array.isArray(registered)?registered.length:body.length;
+ console.log(`[NexusGuard] Successfully synced ${count}/${body.length} slash commands to ${guildId?`guild ${guildId}`:'global scope'} for application ${applicationId}.`);
+ console.log(`[NexusGuard] Registered commands: ${names.join(', ')}`);
+ return {count,scope:guildId?'guild':'global',guildId:guildId||null,applicationId,commandNames:names};
+}
 
 // Private hourly health reports are delivered only to OWNER_DISCORD_ID.
 // SQLite's primary key prevents duplicate reports for the same hour if more
@@ -170,7 +217,7 @@ client.once(Events.ClientReady,async()=>{
   reportTimer.unref?.();
   sendOwnerHourlyReport().catch(e=>captureError('hourly-owner-report',e));
  }
- try{const rest=new REST({version:'10'}).setToken(process.env.DISCORD_TOKEN);const body=commands.map(c=>c.data.toJSON());if(process.env.DEV_GUILD_ID){await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID,process.env.DEV_GUILD_ID),{body});console.log(`Registered ${body.length} commands to development guild.`);}else{await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),{body});console.log(`Registered ${body.length} global commands.`);}}catch(e){captureError('command-registration',e);}
+ try{await syncSlashCommands();}catch(e){captureError('command-registration',e);}
 });
 client.on(Events.InteractionCreate,async i=>{if(!i.isChatInputCommand())return;const cmd=commands.find(c=>c.data.name===i.commandName);if(!cmd)return;try{await cmd.execute(i);}catch(e){captureError(`command:${i.commandName}`,e);const msg={content:'Something went wrong while running that command. The error has been logged.',ephemeral:true};if(i.replied||i.deferred)await i.followUp(msg).catch(()=>{});else await i.reply(msg).catch(()=>{});}});
 client.on(Events.GuildMemberAdd,async member=>{try{const s=getSettings(member.guild.id);if(s.welcomeEnabled&&s.welcomeChannelId){const ch=member.guild.channels.cache.get(s.welcomeChannelId);if(ch?.isTextBased())await ch.send(s.welcomeMessage.replaceAll('{user}',`${member}`).replaceAll('{server}',member.guild.name).slice(0,1800));}if(s.autoRoleIds?.length)await member.roles.add(s.autoRoleIds.filter(id=>member.guild.roles.cache.has(id))).catch(()=>{});}catch(e){captureError('member-join',e);}});
